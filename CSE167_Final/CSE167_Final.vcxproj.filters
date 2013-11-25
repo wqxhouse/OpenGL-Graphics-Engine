@@ -13,33 +13,168 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="头文件\World">
-      <UniqueIdentifier>{555dadb7-7ca7-4ac4-945b-b2c9b6682e0c}</UniqueIdentifier>
+    <Filter Include="源文件\core">
+      <UniqueIdentifier>{88628a07-4acb-4b26-9daa-8f9ffbeb5d7b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\World">
-      <UniqueIdentifier>{7c62fab7-e208-4770-87a6-141428765772}</UniqueIdentifier>
+    <Filter Include="头文件\core">
+      <UniqueIdentifier>{4936fba3-b4a0-471f-88f5-15d897cfb6cd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\utils">
-      <UniqueIdentifier>{b1087aef-61b7-48d4-96bb-b4adbf127d8c}</UniqueIdentifier>
+    <Filter Include="源文件\objects">
+      <UniqueIdentifier>{10180d7a-6ba8-4dab-a5c5-2a8d4be787e0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\utils">
-      <UniqueIdentifier>{32d14d98-d13f-46b7-97e8-e39d24e2d932}</UniqueIdentifier>
+    <Filter Include="头文件\objects">
+      <UniqueIdentifier>{66b50c2f-9a5e-4ec8-aa92-9a18ea0b89cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\math">
+      <UniqueIdentifier>{f3db4e75-d55d-4cbc-98ec-440fce3e762d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\math">
+      <UniqueIdentifier>{eb1c1677-c195-469f-8084-0fea17069650}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\properties">
+      <UniqueIdentifier>{38e2a3a0-df75-4958-8186-28c56c8f8c99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\properties">
+      <UniqueIdentifier>{5b8937fb-813b-4166-bafe-f1787d300ca1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\scene">
+      <UniqueIdentifier>{bf4e95c6-bf88-421d-8f54-51a7136ad45c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\scene">
+      <UniqueIdentifier>{27eece49-983a-4cf6-8885-93471a51148b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\shader">
+      <UniqueIdentifier>{ab7ad940-89a3-45d0-aa2f-c31f1a3ac90f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\shader">
+      <UniqueIdentifier>{b01aa522-9136-42c4-824e-d90106999048}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\glext_win32">
+      <UniqueIdentifier>{299846eb-d6a4-4543-afac-41a343219a53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\glext_win32">
+      <UniqueIdentifier>{feff9f46-fd3a-4f62-9847-c7b63e5aeb6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\primitives">
+      <UniqueIdentifier>{718be234-4591-4ee9-bff3-8323c76e5134}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\primitives">
+      <UniqueIdentifier>{94a1808a-0b75-431d-aeb6-5324eb13b8cb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MainEntry.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Node.cpp">
-      <Filter>源文件\World</Filter>
+    <ClCompile Include="core.cpp">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>源文件\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Fog.cpp">
+      <Filter>源文件\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Matrix4.cpp">
+      <Filter>源文件\math</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector4.cpp">
+      <Filter>源文件\math</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector3.cpp">
+      <Filter>源文件\math</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>源文件\properties</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>源文件\properties</Filter>
+    </ClCompile>
+    <ClCompile Include="Frustum.cpp">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="BSPTree.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="OGeometry.cpp">
+      <Filter>源文件\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="OParticles.cpp">
+      <Filter>源文件\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>源文件\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision.cpp">
+      <Filter>源文件\properties</Filter>
+    </ClCompile>
+    <ClCompile Include="glext.cpp">
+      <Filter>源文件\glext_win32</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>源文件\primitives</Filter>
+    </ClCompile>
+    <ClCompile Include="Particles.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Node.h">
-      <Filter>头文件\World</Filter>
+    <ClInclude Include="core.h">
+      <Filter>头文件\core</Filter>
     </ClInclude>
-    <ClInclude Include="Factory.h">
-      <Filter>头文件\utils</Filter>
+    <ClInclude Include="Light.h">
+      <Filter>头文件\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Fog.h">
+      <Filter>头文件\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix4.h">
+      <Filter>头文件\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector3.h">
+      <Filter>头文件\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector4.h">
+      <Filter>头文件\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>头文件\properties</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>头文件\properties</Filter>
+    </ClInclude>
+    <ClInclude Include="Frustum.h">
+      <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="BSPTree.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>头文件\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="OGeometry.h">
+      <Filter>头文件\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="OParticles.h">
+      <Filter>头文件\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Collision.h">
+      <Filter>头文件\properties</Filter>
+    </ClInclude>
+    <ClInclude Include="glext.h">
+      <Filter>头文件\glext_win32</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>头文件\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="Particles.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
