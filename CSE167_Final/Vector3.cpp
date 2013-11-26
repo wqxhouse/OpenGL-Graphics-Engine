@@ -280,3 +280,35 @@ void Vector3::Print(Vector3 &v)
 			 << "Y: " <<v.m_y <<std::endl
 			 << "Z: " <<v.m_z <<std::endl;
 }
+
+Vector3 Vector3::Normalize(const Vector3& v)
+{
+	float length = v.getLength();
+
+	if(length == 0.0f)
+	{
+		assert(false);
+	}
+
+	if(length == 1)
+	{
+		return;
+	}
+
+	Vector3 vTemp(v['x'], v['y'], v['z']);
+	// mul since div is expensive
+	float factor = 1.0f/length;
+	vTemp.set(v['x'] * factor, 'x');
+	vTemp.set(v['y'] * factor, 'y');
+	vTemp.set(v['z'] * factor, 'z');
+
+	return vTemp;
+}
+
+Vector3 Vector3::Cross(const Vector3& v1, const Vector3 & v2)
+{
+	return Vector3(
+		(v1['y']*v2['z']) - (v1['z']*v2['y']), 
+		(v1['z']*v2['x']) - (v1['x']*v2['z']), 
+		(v1['x']*v2['y']) - (v1['y']*v2['x']));
+}

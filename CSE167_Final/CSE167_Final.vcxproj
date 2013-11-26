@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Bounds.cpp" />
     <ClCompile Include="BSPTree.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Collision.cpp" />
@@ -23,7 +24,9 @@
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Matrix4.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshFile.cpp" />
     <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ObjectViewer.cpp" />
     <ClCompile Include="OGeometry.cpp" />
     <ClCompile Include="OParticles.cpp" />
     <ClCompile Include="Particles.cpp" />
@@ -32,6 +35,7 @@
     <ClCompile Include="Vector4.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bounds.h" />
     <ClInclude Include="BSPTree.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collision.h" />
@@ -43,7 +47,10 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix4.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshFile.h" />
+    <ClInclude Include="MeshFileObj.h" />
     <ClInclude Include="Object.h" />
+    <ClInclude Include="ObjectViewer.h" />
     <ClInclude Include="OGeometry.h" />
     <ClInclude Include="OParticles.h" />
     <ClInclude Include="Particles.h" />

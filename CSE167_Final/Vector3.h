@@ -66,6 +66,9 @@ public:
 	Vector3(float x, float y, float z);
 	~Vector3();
 
+	static Vector3 Normalize(const Vector3& v);
+	static Vector3 Cross(const Vector3& v1, const Vector3 & v2);
+
 private:
 	float m_x, m_y, m_z;
 };
