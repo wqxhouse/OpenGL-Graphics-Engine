@@ -2,6 +2,7 @@
 #include "Vector4.h"
 #include "Matrix4.h"
 
+class BFrustum;
 class BSphere;
 class BBox
 {
@@ -72,12 +73,12 @@ private:
 	Vector3 max;		// bounding box maximum
 };
 
-class BSpehre
+class BSphere
 {
 public:
 	BSphere();
 	BSphere(const Vector3 &center, float radius);
-	~BSpehre();
+	~BSphere();
 
 	void clear();
 
@@ -137,4 +138,12 @@ public:
 private:
 
 	Vector4 center;	// bounding sphere center and radius
+};
+
+class BFrustum
+{
+public:
+	BFrustum();
+	~BFrustum();
+
 };

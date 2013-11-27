@@ -135,6 +135,24 @@
     <ClCompile Include="ObjectViewer.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
+    <ClCompile Include="World.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Factory.cpp">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="PXml.cpp">
+      <Filter>源文件\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Sector.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Portal.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.h">
@@ -202,6 +220,27 @@
     </ClInclude>
     <ClInclude Include="ObjectViewer.h">
       <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Factory.h">
+      <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="ManagedNode_Container.h">
+      <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="PXml.h">
+      <Filter>头文件\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Sector.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Portal.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

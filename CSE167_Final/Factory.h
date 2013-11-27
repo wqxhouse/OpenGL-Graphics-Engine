@@ -32,7 +32,7 @@ public:
 	~Factory(void) {}
 
 private:
-	friend class FactoryCreator;
+	friend class FactoryCreator<Type>;
 	static FactoryCreator<Type> *creatorArr[NUM_TYPES];
 
 	static void addCreator(int type, FactoryCreator *pCreator)

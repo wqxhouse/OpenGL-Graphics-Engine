@@ -16,6 +16,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="core.cpp" />
+    <ClCompile Include="Factory.cpp" />
     <ClCompile Include="Fog.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="glext.cpp" />
@@ -25,14 +26,19 @@
     <ClCompile Include="Matrix4.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshFile.cpp" />
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectViewer.cpp" />
     <ClCompile Include="OGeometry.cpp" />
     <ClCompile Include="OParticles.cpp" />
     <ClCompile Include="Particles.cpp" />
+    <ClCompile Include="Portal.cpp" />
+    <ClCompile Include="PXml.cpp" />
+    <ClCompile Include="Sector.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Vector3.cpp" />
     <ClCompile Include="Vector4.cpp" />
+    <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bounds.h" />
@@ -40,6 +46,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collision.h" />
     <ClInclude Include="core.h" />
+    <ClInclude Include="Factory.h" />
     <ClInclude Include="Fog.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="glext.h" />
@@ -49,14 +56,20 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshFile.h" />
     <ClInclude Include="MeshFileObj.h" />
+    <ClInclude Include="Node.h" />
+    <ClInclude Include="ManagedNode_Container.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="ObjectViewer.h" />
     <ClInclude Include="OGeometry.h" />
     <ClInclude Include="OParticles.h" />
     <ClInclude Include="Particles.h" />
+    <ClInclude Include="Portal.h" />
+    <ClInclude Include="PXml.h" />
+    <ClInclude Include="Sector.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />
+    <ClInclude Include="World.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{10744AC5-8330-44EF-B580-AB02C4AF0729}</ProjectGuid>

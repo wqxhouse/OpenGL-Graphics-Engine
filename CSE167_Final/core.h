@@ -52,19 +52,17 @@ public:
 	static Camera camera_;
 	static Frustum *frustum_;
 
-	static BSPTree *bsp_;
 
-	static std::vector<Object*> objects_;
 
-	// lights
-	static std::vector<Light*> lights_;
-	static std::vector<Light*> visible_lights_;
-	static Light *curr_light_;
+	//// lights
+	//static std::vector<Light*> lights_;
+	//static std::vector<Light*> visible_lights_;
+	//static Light *curr_light_;
 
-	// fogs
-	static std::vector<Fog*> fogs_;
-	static std::vector<Fog*> visible_fogs_;
-	static Fog *curr_fog_;
+	//// fogs
+	//static std::vector<Fog*> fogs_;
+	//static std::vector<Fog*> visible_fogs_;
+	//static Fog *curr_fog_;
 
 	//TODO: occlusion test
 	//TODO: shadow volume
