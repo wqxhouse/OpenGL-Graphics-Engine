@@ -1,7 +1,8 @@
 #include "OParticles.h"
 
 
-OParticles::OParticles(void)
+OParticles::OParticles(Particles *particle)
+	: Object(OBJ_PARTICLES)
 {
 }
 

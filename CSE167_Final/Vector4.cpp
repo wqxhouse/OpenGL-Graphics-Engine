@@ -3,7 +3,6 @@
 #include "assert.h"
 #include <cmath>
 
-
 // Constructors ////////////////////
 Vector4::Vector4():
 	m_x(0.0f), 
@@ -199,4 +198,37 @@ void Vector4::normalizePlane()
 	m_y *= factor;
 	m_z *= factor;
 	m_w *= factor;
+}
+
+
+float Vector4::dot(const Vector4 v) const
+{
+	return m_x * v.m_x + m_y * v.m_y + m_z * v.m_z + m_w * v.m_w;
+}
+
+float Vector4::operator * (const Vector4 v) const
+{
+	return dot(v);
+}
+
+Vector3 Vector4::getVector3() const
+{
+	return Vector3(m_x, m_y, m_z);
+}
+
+void Vector4::setVector3(const Vector3 &v)
+{
+	m_x = v.get('x');
+	m_y = v.get('y');
+	m_z = v.get('z');
+}
+
+Vector4 Vector4::scale(const Vector4 &v) const
+{
+	float x = factor * v.m_x;
+	float y = factor * v.m_y;
+	float z = factor * v.m_z;
+	float w = factor * v.m_w;
+
+	return Vector4(x, y, z, w);
 }

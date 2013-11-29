@@ -1,6 +1,6 @@
-#include "MeshFile.h"
 #include "MeshFileObj.h"
 #include "assert.h"
+#include "Vector4.h"
 
 #include "string.h"
 MeshFileOBJ::MeshFileOBJ()
@@ -12,8 +12,8 @@ MeshFileOBJ::MeshFileOBJ()
 
 }
 
-int MeshFileOBJ::load(const char *name) {
-	
+int MeshFileOBJ::load(const char *name) 
+{
 	file.open(name, std::ios::binary | std::ios::in);
 	if(file.fail())
 	{
@@ -162,8 +162,8 @@ int MeshFileOBJ::read_vertex(const char *src,Vertex &v)
 
 /*
  */
-void MeshFileOBJ::calculate_normals() {
-	
+void MeshFileOBJ::calculate_normals() 
+{
 	normals.resize(vertices.size());
 	for(int i = 0; i < normals.size(); i++) {
 		normals[i] = Vector3(0, 0, 0);
@@ -213,7 +213,7 @@ const char *MeshFileOBJ::getSurfaceName(int surface)
 		Surface *s = &surfaces[i];
 		if(s->vertex.size() == 0) continue;
 		if(num_surfaces++ == surface) {
-			return s->name;
+			return s->name.c_str();
 		}
 	}
 	
@@ -250,7 +250,7 @@ Mesh::Vertex *MeshFileOBJ::getVertex(int surface)
 			for(int j = 0; j < s->vertex.size(); j++) {
 				vertex[j].xyz = vertices[s->vertex[j].v];
 				if(normals.size()) vertex[j].normal = normals[s->vertex[j].vn];
-				if(texcoords.size()) vertex[j].texcoord = vec4(texcoords[s->vertex[j].vt].x,1.0f - texcoords[s->vertex[j].vt].y,0.0f,0.0f);
+				if(texcoords.size()) vertex[j].texcoord = Vector4(texcoords[s->vertex[j].vt]['x'],1.0f - texcoords[s->vertex[j].vt]['y'],0.0f,0.0f);
 			}
 			return vertex;
 		}

@@ -331,7 +331,7 @@ void Matrix4::setScale(Vector3 &factor)
 }
 
 //Make translation matrix
-void Matrix4::setTranslate(Vector3 &factor)
+void Matrix4::setTranslate(const Vector3 &factor)
 {
 	loadIdentity();
 

@@ -130,12 +130,9 @@ static void idle()
 		if(intersectedObj != nullptr)
 		{
 			//TODO: add physics support later
-			p_bullet_explosion->
-
+			//p_bullet_explosion->
 		}
 	}
-	
-
 }
 
 static void keyboard(unsigned char key, int x, int y)

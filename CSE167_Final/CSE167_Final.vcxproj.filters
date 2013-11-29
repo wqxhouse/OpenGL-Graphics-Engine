@@ -67,6 +67,12 @@
     <Filter Include="头文件\filesystem">
       <UniqueIdentifier>{79dd898b-cac4-4bc9-81b7-9c422f945f9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\physics">
+      <UniqueIdentifier>{bcccce68-ea9b-4297-b957-80e4c2362854}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\physics">
+      <UniqueIdentifier>{b1f5e4fc-c7f9-4572-a0c2-1e6dba9a1e1e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -135,6 +141,15 @@
     <ClCompile Include="ObjectViewer.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
+    <ClCompile Include="BasicMath.cpp">
+      <Filter>源文件\math</Filter>
+    </ClCompile>
+    <ClCompile Include="Position.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="RigidBody.cpp">
+      <Filter>源文件\physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.h">
@@ -191,9 +206,6 @@
     <ClInclude Include="Particles.h">
       <Filter>头文件\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="MeshFile.h">
-      <Filter>头文件\filesystem</Filter>
-    </ClInclude>
     <ClInclude Include="MeshFileObj.h">
       <Filter>头文件\filesystem</Filter>
     </ClInclude>
@@ -202,6 +214,15 @@
     </ClInclude>
     <ClInclude Include="ObjectViewer.h">
       <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicMath.h">
+      <Filter>头文件\math</Filter>
+    </ClInclude>
+    <ClInclude Include="RigidBody.h">
+      <Filter>头文件\physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Position.h">
+      <Filter>头文件\scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <glut/glut.h>
+#include "Frustum.h"
 
 
 class Object;
@@ -13,6 +14,7 @@ class Material;
 class Frustum;
 class BSPTree;
 class Camera;
+class Vector3;
 class Vector4;
 class Matrix4;
 class Shader;
@@ -43,13 +45,15 @@ public:
 	static void RenderScene(float spf);
 	static Object *GetIntersectObject(const Vector3 &l0,const Vector3 &l1, Vector3 *pt, Vector3 *n);
 
-	//static ObjectBase *intersection
+	static bool have_occlusion_;
+	static int o_query_id_;
 
 	// screen
 	static int win_width_;
 	static int win_height_;
+	static int num_triangles_;
 
-	static Camera camera_;
+	static Position camera_;
 	static Frustum *frustum_;
 
 	static BSPTree *bsp_;

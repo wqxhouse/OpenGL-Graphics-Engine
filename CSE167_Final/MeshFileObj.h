@@ -1,5 +1,5 @@
 #pragma once
-#include "MeshFile.h"
+#include "Mesh.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -7,7 +7,7 @@
 #include "Vector3.h"
 
 class MeshFileOBJ : 
-	public MeshFile 
+	public Mesh 
 {
 public:
 

@@ -1,4 +1,6 @@
 #pragma once
+#include "Vector3.h"
+
 class Vector4
 {
 public:
@@ -29,6 +31,14 @@ public:
 	//Overload operator '-' for subtraction
 	Vector4 operator - (const Vector4 &v);
 
+	float dot(const Vector4 v) const;
+	float operator * (const Vector4 v) const;
+
+	Vector4 scale(const Vector4 &v) const;
+
+	Vector3 getVector3() const;
+	void setVector3(const Vector3 &v);
+
 	//Dehomogenize (make fourth component equal to 1)
 	void dehomogenize();
 	void normalizePlane();
@@ -44,6 +54,7 @@ public:
 	//A constructor with three (or four, optionally) parameters for the point coordinates
 	Vector4(float x, float y, float z);
 	Vector4(float x, float y, float z, float w);
+
 
 	~Vector4();
 
