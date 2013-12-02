@@ -67,6 +67,12 @@
     <Filter Include="头文件\filesystem">
       <UniqueIdentifier>{79dd898b-cac4-4bc9-81b7-9c422f945f9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\glee">
+      <UniqueIdentifier>{5456eab6-6413-4262-8ff9-80a1d1b70f89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\glee">
+      <UniqueIdentifier>{302efaff-4ff0-4464-8b74-f5db24155b3a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -135,6 +141,33 @@
     <ClCompile Include="ObjectViewer.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
+    <ClCompile Include="World.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Factory.cpp">
+      <Filter>源文件\core</Filter>
+    </ClCompile>
+    <ClCompile Include="PXml.cpp">
+      <Filter>源文件\filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Sector.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectSurface.cpp">
+      <Filter>源文件\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Portal.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>源文件\shader</Filter>
+    </ClCompile>
+    <ClCompile Include="GLee.c">
+      <Filter>源文件\glee</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.h">
@@ -202,6 +235,36 @@
     </ClInclude>
     <ClInclude Include="ObjectViewer.h">
       <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Factory.h">
+      <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="ManagedNode_Container.h">
+      <Filter>头文件\core</Filter>
+    </ClInclude>
+    <ClInclude Include="PXml.h">
+      <Filter>头文件\filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Sector.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectSurface.h">
+      <Filter>头文件\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Portal.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>源文件\shader</Filter>
+    </ClInclude>
+    <ClInclude Include="GLee.h">
+      <Filter>头文件\glee</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
