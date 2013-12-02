@@ -11,12 +11,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BasicMath.cpp" />
     <ClCompile Include="Bounds.cpp" />
     <ClCompile Include="BSPTree.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="core.cpp" />
-    <ClCompile Include="Fog.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="glext.cpp" />
     <ClCompile Include="Light.cpp" />
@@ -25,38 +25,50 @@
     <ClCompile Include="Matrix4.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshFile.cpp" />
+    <ClCompile Include="MeshVBO.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectViewer.cpp" />
     <ClCompile Include="OGeometry.cpp" />
-    <ClCompile Include="OParticles.cpp" />
+    <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Particles.cpp" />
+    <ClCompile Include="Position.cpp" />
+    <ClCompile Include="RigidBody.cpp" />
+    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Vector3.cpp" />
     <ClCompile Include="Vector4.cpp" />
+    <ClCompile Include="WorldFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BasicMath.h" />
     <ClInclude Include="Bounds.h" />
     <ClInclude Include="BSPTree.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Collision.h" />
     <ClInclude Include="core.h" />
-    <ClInclude Include="Fog.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="glext.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix4.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="MeshFile.h" />
     <ClInclude Include="MeshFileObj.h" />
+    <ClInclude Include="MeshVBO.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="ObjectViewer.h" />
     <ClInclude Include="OGeometry.h" />
-    <ClInclude Include="OParticles.h" />
+    <ClInclude Include="Parser.h" />
     <ClInclude Include="Particles.h" />
+    <ClInclude Include="Position.h" />
+    <ClInclude Include="RigidBody.h" />
+    <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />
+    <ClInclude Include="WorldFile.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{10744AC5-8330-44EF-B580-AB02C4AF0729}</ProjectGuid>
@@ -87,8 +99,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(SolutionDir)externs;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib</LibraryPath>
-    <IncludePath>$(SolutionDir)externs;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)externs;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(SolutionDir)externs\lib</LibraryPath>
+    <IncludePath>$(SolutionDir)externs;$(SolutionDir)externs\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -106,6 +118,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(SolutionDir)externs\glut\glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/nodefaultlib:libcmt.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)externs\glut\glut32.dll" "$(OutDir)" /Q /Y</Command>

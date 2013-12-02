@@ -20,6 +20,10 @@ Vector3::~Vector3()
 {
 
 }
+Vector3::Vector3(const Vector3 &v)
+{
+	*this = v;
+}
 
 float Vector3::angle(const Vector3 &v) const
 {
@@ -41,7 +45,6 @@ float Vector3::angle(const Vector3 &v) const
 
 	return angle;
 }
-
 
 //Element access 'set': set the vector coordinates
 void Vector3::set(float value, char axis)
@@ -106,7 +109,7 @@ float Vector3::operator [] (char axis) const
 }
 
 //Vector addition
-Vector3 Vector3::add(const Vector3 &v)
+Vector3 Vector3::add(const Vector3 &v) const
 {
 	float x = v.m_x + m_x;
 	float y = v.m_y + m_y;
@@ -125,13 +128,13 @@ Vector3 Vector3::Add(const Vector3 &a, const Vector3 &b)
 }
 
 	//Overload operator '+' for addition
-Vector3	Vector3::operator + (const Vector3 &v)
+Vector3	Vector3::operator + (const Vector3 &v) const
 {
 	return add(v);
 }
 
 //Vector subtraction
-Vector3 Vector3::subtract(const Vector3 &v)
+Vector3 Vector3::subtract(const Vector3 &v) const
 {
 	float x = m_x - v.m_x;
 	float y = m_y - v.m_y;
@@ -151,13 +154,13 @@ Vector3 Vector3::Subtract(const Vector3 &a, const Vector3 &b)
 }
 
 //Overload operator '-' for subtraction
-Vector3 Vector3::operator - (const Vector3 &v)
+Vector3 Vector3::operator - (const Vector3 &v) const
 {
 	return subtract(v);
 }
 
 //Negation
-Vector3 Vector3::negate()
+Vector3 Vector3::negate() const
 {
 	float x = -m_x;
 	float y = -m_y;
@@ -292,7 +295,7 @@ Vector3 Vector3::Normalize(const Vector3& v)
 
 	if(length == 1)
 	{
-		return;
+		return v;
 	}
 
 	Vector3 vTemp(v['x'], v['y'], v['z']);

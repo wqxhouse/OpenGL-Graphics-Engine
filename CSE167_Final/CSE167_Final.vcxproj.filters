@@ -67,11 +67,19 @@
     <Filter Include="头文件\filesystem">
       <UniqueIdentifier>{79dd898b-cac4-4bc9-81b7-9c422f945f9e}</UniqueIdentifier>
     </Filter>
+<<<<<<< HEAD
     <Filter Include="头文件\glee">
       <UniqueIdentifier>{5456eab6-6413-4262-8ff9-80a1d1b70f89}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\glee">
       <UniqueIdentifier>{302efaff-4ff0-4464-8b74-f5db24155b3a}</UniqueIdentifier>
+=======
+    <Filter Include="头文件\physics">
+      <UniqueIdentifier>{bcccce68-ea9b-4297-b957-80e4c2362854}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\physics">
+      <UniqueIdentifier>{b1f5e4fc-c7f9-4572-a0c2-1e6dba9a1e1e}</UniqueIdentifier>
+>>>>>>> 62c9a8c66c70dfbb2ea4864c7bd58579d0f87c01
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -84,13 +92,7 @@
     <ClCompile Include="Light.cpp">
       <Filter>源文件\objects</Filter>
     </ClCompile>
-    <ClCompile Include="Fog.cpp">
-      <Filter>源文件\objects</Filter>
-    </ClCompile>
     <ClCompile Include="Matrix4.cpp">
-      <Filter>源文件\math</Filter>
-    </ClCompile>
-    <ClCompile Include="Vector4.cpp">
       <Filter>源文件\math</Filter>
     </ClCompile>
     <ClCompile Include="Vector3.cpp">
@@ -112,9 +114,6 @@
       <Filter>源文件\scene</Filter>
     </ClCompile>
     <ClCompile Include="OGeometry.cpp">
-      <Filter>源文件\objects</Filter>
-    </ClCompile>
-    <ClCompile Include="OParticles.cpp">
       <Filter>源文件\objects</Filter>
     </ClCompile>
     <ClCompile Include="Object.cpp">
@@ -141,6 +140,7 @@
     <ClCompile Include="ObjectViewer.cpp">
       <Filter>源文件\core</Filter>
     </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="World.cpp">
       <Filter>源文件\scene</Filter>
     </ClCompile>
@@ -167,6 +167,31 @@
     </ClCompile>
     <ClCompile Include="GLee.c">
       <Filter>源文件\glee</Filter>
+=======
+    <ClCompile Include="BasicMath.cpp">
+      <Filter>源文件\math</Filter>
+    </ClCompile>
+    <ClCompile Include="Position.cpp">
+      <Filter>源文件\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="RigidBody.cpp">
+      <Filter>源文件\physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>源文件\properties</Filter>
+    </ClCompile>
+    <ClCompile Include="Parser.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector4.cpp">
+      <Filter>源文件\math</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldFile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshVBO.cpp">
+      <Filter>源文件\primitives</Filter>
+>>>>>>> 62c9a8c66c70dfbb2ea4864c7bd58579d0f87c01
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -174,9 +199,6 @@
       <Filter>头文件\core</Filter>
     </ClInclude>
     <ClInclude Include="Light.h">
-      <Filter>头文件\objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Fog.h">
       <Filter>头文件\objects</Filter>
     </ClInclude>
     <ClInclude Include="Matrix4.h">
@@ -209,9 +231,6 @@
     <ClInclude Include="OGeometry.h">
       <Filter>头文件\objects</Filter>
     </ClInclude>
-    <ClInclude Include="OParticles.h">
-      <Filter>头文件\objects</Filter>
-    </ClInclude>
     <ClInclude Include="Collision.h">
       <Filter>头文件\properties</Filter>
     </ClInclude>
@@ -224,9 +243,6 @@
     <ClInclude Include="Particles.h">
       <Filter>头文件\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="MeshFile.h">
-      <Filter>头文件\filesystem</Filter>
-    </ClInclude>
     <ClInclude Include="MeshFileObj.h">
       <Filter>头文件\filesystem</Filter>
     </ClInclude>
@@ -236,6 +252,7 @@
     <ClInclude Include="ObjectViewer.h">
       <Filter>头文件\core</Filter>
     </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="World.h">
       <Filter>头文件\scene</Filter>
     </ClInclude>
@@ -266,5 +283,31 @@
     <ClInclude Include="GLee.h">
       <Filter>头文件\glee</Filter>
     </ClInclude>
+=======
+    <ClInclude Include="BasicMath.h">
+      <Filter>头文件\math</Filter>
+    </ClInclude>
+    <ClInclude Include="RigidBody.h">
+      <Filter>头文件\physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Position.h">
+      <Filter>头文件\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>头文件\properties</Filter>
+    </ClInclude>
+    <ClInclude Include="Parser.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WorldFile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshVBO.h">
+      <Filter>头文件\primitives</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
+>>>>>>> 62c9a8c66c70dfbb2ea4864c7bd58579d0f87c01
   </ItemGroup>
 </Project>

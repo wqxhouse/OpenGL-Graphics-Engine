@@ -1,14 +1,26 @@
 #pragma once
+#include <string>
 #include <vector>
 
+#include "core.h"
 #include "BSPTree.h"
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix4.h"
 #include "Material.h"
+#include "RigidBody.h"
+#include "Bounds.h"
+#include "Position.h"
 
 class Object
 {
+public:
+	enum 
+	{
+		OBJ_GEOMETRY = 0,
+		OBJ_PARTICLES,
+	};
+
 	Object(int type);
 	virtual ~Object();
 
@@ -17,68 +29,57 @@ class Object
 
 	int bindMaterial(const char *name, Material *material);
 
-	enum 
-	{
-		RENDER_ALL = 0,
-		RENDER_OPACITY,
-		RENDER_TRANSPARENT
-	};
-
-	virtual int render(int t = RENDER_ALL,int s = -1) = 0;
-
-	virtual void findSilhouette(const Vector4 &light,int s = -1) = 0;
-	virtual int getNumIntersections(const Vector3 &line0,const Vector3 &line1,int s = -1) = 0;
-	virtual int renderShadowVolume(int s = -1)  = 0;
-
-	virtual int intersection(const Vector3 &line0,const Vector3 &line1, Vector3 *point,Vector3 *normal, int s = -1) = 0;
+	virtual int render(int surface_id = -1) = 0;
+	virtual int getIntersection(const Vector3 &l0,
+		const Vector3 &l1, 
+		Vector3 *point,
+		Vector3 *normal, 
+		int surface_id = -1) = 0;
 
 	virtual int getNumSurfaces() = 0;
-	virtual const char *getSurfaceName(int s) = 0;
+	virtual const std::string getSurfaceName(int surface_id) = 0;
 	virtual int getSurface(const char *name) = 0;
 
-	virtual const Vector3 &getMin(int s = -1) = 0;
-	virtual const Vector3 &getMax(int s = -1) = 0;
-	virtual const Vector3 &getCenter(int s = -1) = 0;
-	virtual float getRadius(int s = -1) = 0;
+	//bbox
+	virtual const Vector3 &getMin(int surface_id = -1) = 0;
+	virtual const Vector3 &getMax(int surface_id = -1) = 0;
 
-	//void setRigidBody(RigidBody *rigidbody);
+	//bsphere
+	virtual const Vector3 &getCenter(int surface_id = -1) = 0;
+	virtual float getRadius(int surface_id = -1) = 0;
 
-	void setShadows(int shadows);
+	void setRigidBody(RigidBody *rigidbody);
 
 	virtual void set_position(const Vector3 &p);	// set position
 	virtual void set_transform(const Matrix4 &m);	// set transformation
 
 	void enable();				// enable transformation
 	void disable();				// disable
+	void setShadows(bool b_shadows);
 
-	enum {
-		OBJECT_MESH = 0,
-		OBJECT_SKINNEDMESH,
-		OBJECT_PARTICLES
-	};
+	int type_;					// type of the object
 
-	int type;					// type of the object
-
-	Vector3 pos;				// position of the object
+	Position pos_;				// position of the object
 	//TODO: potential expansion of the position to allow bezier path moving
 
-	//RigidBody *rigidbody;		// rigidbody dynamic
+	RigidBody *rigidbody_;		// rigidbody dynamic
 
-	int is_identity;
-	Matrix4 transform;
-	Matrix4 itransform;
+	int is_identity_;
+	Matrix4 transform_;
+	Matrix4 itransform_;
 
-	Matrix4 prev_modelview;			// save old matrixes
-	Matrix4 prev_imodelview;
-	Matrix4 prev_transform;
-	Matrix4 prev_itransform;
+	Matrix4 prev_modelview_;			// save old matrixes
+	Matrix4 prev_imodelview_;
+	Matrix4 prev_transform_;
+	Matrix4 prev_itransform_;
 
 	std::vector<Material*> materials_;		// all materials
 
-	//TODO: add transparency property
-
-	int shadows_;
+	bool shadows_;
 
 	float time_;					// object time
 	int frame_;
+
+	BSphere bsphere_;
+	BBox bbox_;
 };

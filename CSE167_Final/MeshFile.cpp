@@ -1,8 +1,8 @@
-#include "MeshFile.h"
 #include "MeshFileObj.h"
 #include "assert.h"
-
+#include "Vector4.h"
 #include "string.h"
+
 MeshFileOBJ::MeshFileOBJ()
 	: vertices(), 
 	  surfaces(), 
@@ -12,8 +12,13 @@ MeshFileOBJ::MeshFileOBJ()
 
 }
 
-int MeshFileOBJ::load(const char *name) {
-	
+MeshFileOBJ::~MeshFileOBJ()
+{
+
+}
+
+int MeshFileOBJ::load(const char *name) 
+{
 	file.open(name, std::ios::binary | std::ios::in);
 	if(file.fail())
 	{
@@ -162,16 +167,19 @@ int MeshFileOBJ::read_vertex(const char *src,Vertex &v)
 
 /*
  */
-void MeshFileOBJ::calculate_normals() {
-	
+void MeshFileOBJ::calculate_normals() 
+{
 	normals.resize(vertices.size());
-	for(int i = 0; i < normals.size(); i++) {
+	for(int i = 0; i < normals.size(); i++) 
+	{
 		normals[i] = Vector3(0, 0, 0);
 	}
 	
-	for(int i = 0; i < surfaces.size(); i++) {
+	for(int i = 0; i < surfaces.size(); i++) 
+	{
 		Surface *s = &surfaces[i];
-		for(int j = 0; j < s->vertex.size(); j += 3) {
+		for(int j = 0; j < s->vertex.size(); j += 3) 
+		{
 			Vertex *v0 = &s->vertex[j + 0];
 			Vertex *v1 = &s->vertex[j + 1];
 			Vertex *v2 = &s->vertex[j + 2];
@@ -193,27 +201,30 @@ void MeshFileOBJ::calculate_normals() {
 
 /*
  */
-int MeshFileOBJ::getNumSurfaces()
-{
+int MeshFileOBJ::getNumSurfaces() const
+{ 
 	
 	int num_surfaces = 0;
-	for(int i = 0; i < surfaces.size(); i++) {
-		Surface *s = &surfaces[i];
-		if(s->vertex.size() == 0) continue;
+	for(int i = 0; i < surfaces.size(); i++) 
+	{
+		const Surface &s = surfaces[i];
+		if(s.vertex.size() == 0) continue;
 		num_surfaces++;
 	}
 	
 	return num_surfaces;
 }
 
-const char *MeshFileOBJ::getSurfaceName(int surface)
+const char *MeshFileOBJ::getSurfaceName(int surface) const
 {
 	int num_surfaces = 0;
-	for(int i = 0; i < surfaces.size(); i++) {
-		Surface *s = &surfaces[i];
-		if(s->vertex.size() == 0) continue;
-		if(num_surfaces++ == surface) {
-			return s->name;
+	for(int i = 0; i < surfaces.size(); i++) 
+	{
+		const Surface &s = surfaces[i];
+		if(s.vertex.size() == 0) continue;
+		if(num_surfaces++ == surface) 
+		{
+			return s.name.c_str();
 		}
 	}
 	
@@ -222,62 +233,56 @@ const char *MeshFileOBJ::getSurfaceName(int surface)
 
 /*
  */
-int MeshFileOBJ::getNumVertex(int surface) 
+int MeshFileOBJ::getNumVertex(int surface) const
 {
 	
 	int num_surfaces = 0;
-	for(int i = 0; i < surfaces.size(); i++) {
-		Surface *s = &surfaces[i];
-		if(s->vertex.size() == 0) continue;
-		if(num_surfaces++ == surface) {
-			return s->vertex.size();
+	for(int i = 0; i < surfaces.size(); i++) 
+	{
+		const Surface &s = surfaces[i];
+		if(s.vertex.size() == 0) continue;
+		if(num_surfaces++ == surface) 
+		{
+			return s.vertex.size();
 		}
 	}
 	
 	return 0;
 }
 
-Mesh::Vertex *MeshFileOBJ::getVertex(int surface) 
+Mesh::Vertex *MeshFileOBJ::getVertex(int surface) const
 {
 	Mesh::Vertex *vertex = nullptr;
 	
 	int num_surfaces = 0;
-	for(int i = 0; i < surfaces.size(); i++) {
-		Surface *s = &surfaces[i];
-		if(s->vertex.size() == 0) continue;
-		if(num_surfaces++ == surface) {
-			Mesh::Vertex *vertex = new Mesh::Vertex[s->vertex.size()];
-			for(int j = 0; j < s->vertex.size(); j++) {
-				vertex[j].xyz = vertices[s->vertex[j].v];
-				if(normals.size()) vertex[j].normal = normals[s->vertex[j].vn];
-				if(texcoords.size()) vertex[j].texcoord = vec4(texcoords[s->vertex[j].vt].x,1.0f - texcoords[s->vertex[j].vt].y,0.0f,0.0f);
+	for(int i = 0; i < surfaces.size(); i++) 
+	{
+		const Surface &s = surfaces[i];
+		if(s.vertex.size() == 0)
+		{
+			continue;
+		}
+		if(num_surfaces++ == surface) 
+		{
+			Mesh::Vertex *vertex = new Mesh::Vertex[s.vertex.size()];
+			for(int j = 0; j < s.vertex.size(); j++) 
+			{
+				vertex[j].xyz = vertices[s.vertex[j].v];
+				if(normals.size())
+				{
+					vertex[j].normal = normals[s.vertex[j].vn];
+				}
+				if(texcoords.size())
+				{
+					vertex[j].texcoord = 
+						Vector3(texcoords[s.vertex[j].vt]['x'],
+						        1.0f - texcoords[s.vertex[j].vt]['y'], 
+								0.0f);
+				}
 			}
 			return vertex;
 		}
 	}
 	
 	return vertex;
-}
-
-
-//base class 
-MeshFile::~MeshFile() 
-{
-
-}
-
-MeshFile *MeshFile::load(const char *name) 
-{
-	if(strstr(name,".obj") || strstr(name,".OBJ")) 
-	{
-		MeshFileOBJ *file = new MeshFileOBJ();
-		if(file->load(name)) 
-		{
-			return file;
-		}
-		delete file;
-		return nullptr;
-	}
-
-	return nullptr;
 }
