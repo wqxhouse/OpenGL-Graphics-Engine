@@ -21,6 +21,8 @@ Mesh::Mesh(const Mesh *mesh)
 	bbox_ = mesh->bbox_;
 	bsphere_ = mesh->bsphere_;
 
+	//note that all num_ * are not being copied, 
+	//this is only used as a protected contructor for subclass to fill in num_*
 	for(int i = 0; i < mesh->surfaces_.size(); i++) 
 	{
 		Surface *s = new Surface;
@@ -29,6 +31,9 @@ Mesh::Mesh(const Mesh *mesh)
 		s->vertex = new Vertex[s->num_vertex];
 		memcpy(s->vertex,mesh->surfaces_[i]->vertex,sizeof(Vertex) * s->num_vertex);
 
+		s->cvertex = new Vector3[s->num_cvertex];
+		memcpy(s->cvertex, mesh->surfaces_[i]->cvertex, sizeof(Vector3) * s->num_cvertex);
+		
 		if(mesh->surfaces_[i]->edges) 
 		{
 			s->edges = new Edge[s->num_edges];
@@ -67,20 +72,23 @@ void Mesh::load_obj_mesh(const MeshFileOBJ &objmesh)
 	{
 		Surface *s = new Surface;
 		init_surface(s);
-
 		// name
 		s->name = objmesh.getSurfaceName(i);
-
-		// vertexes
-		int num_vertex = objmesh.getNumVertex(i);
-
-		/*load_mesh_Vertex *vertex = new load_mesh_Vertex[num_vertex];
-		fread(vertex,sizeof(load_mesh_Vertex),num_vertex,file);*/
-		s->vertex = new Vertex[num_vertex];
-		Vertex *vtxArr_sur_i = objmesh.getVertex(i);
+		// Vertex
+		int num_vertex			= objmesh.getNumVertex(i);
+		s->vertex				= new Vertex[num_vertex];
+		s->num_vertex			= num_vertex;
+		Vertex *vtxArr_sur_i    = objmesh.getVertex(i);
 		std::copy(vtxArr_sur_i, vtxArr_sur_i + num_vertex, s->vertex);
-		delete vtxArr_sur_i;
-
+		delete []vtxArr_sur_i;
+		// cvertex
+		s->num_cvertex = num_vertex;
+		s->cvertex     = new Vector3[s->num_cvertex];
+		//unroll s->vertex array to fill in vertex coordinates 
+		for(int q = 0; q < s->num_cvertex; q++)
+		{
+			s->cvertex[q] = s->vertex[q].xyz;
+		}
 		surfaces_.push_back(s);
 	}
 }
@@ -140,13 +148,13 @@ static int cts_vertex_cmp(const void *a,const void *b) {
 	Mesh::Vertex *v1 = &ctsv1->v;
 	float d;
 #define CMP(a,b,e) { \
-	d = (a)[0] - (b)[0]; \
+	d = (a)['x'] - (b)['x']; \
 	if(d > e) return 1; \
 	if(d < -e) return -1; \
-	d = (a)[1] - (b)[1]; \
+	d = (a)['y'] - (b)['y']; \
 	if(d > e) return 1; \
 	if(d < -e) return -1; \
-	d = (a)[2] - (b)[2]; \
+	d = (a)['z'] - (b)['z']; \
 	if(d > e) return 1; \
 	if(d < -e) return -1; \
 	}
@@ -155,10 +163,10 @@ static int cts_vertex_cmp(const void *a,const void *b) {
 		//CMP(v0->tangent,v1->tangent,0.1)
 		//CMP(v0->binormal,v1->binormal,0.1)
 #undef CMP
-		d = v0->texcoord[0] - v1->texcoord[0];
+		d = v0->texcoord['x'] - v1->texcoord['x'];
 	if(d > MATH_EPSILON) return 1;
 	if(d < -MATH_EPSILON) return -1;
-	d = v0->texcoord[1] - v1->texcoord[1];
+	d = v0->texcoord['y'] - v1->texcoord['y'];
 	if(d > MATH_EPSILON) return 1;
 	if(d < -MATH_EPSILON) return -1;
 	return 0;
@@ -310,14 +318,14 @@ void Mesh::create_triangle_strips()
 			}
 		}
 		delete t;
-		delete s->vertex;
+		delete []s->vertex;
 		s->num_vertex = num_optimized_vertex;
 		s->vertex = new Vertex[s->num_vertex];
 		for(int j = 0; j < s->num_vertex; j++)
 		{
 			s->vertex[j] = v[j].v;
 		}
-		delete v;
+		delete []v;
 		indices = new int[s->num_indices];
 		for(int j = 0; j < s->num_indices; j++)
 		{
@@ -345,14 +353,14 @@ void Mesh::create_tangent()
 			Vector3 e1 = Vector3(0,v2->texcoord['x'] - v0->texcoord['x'],v2->texcoord['y'] - v0->texcoord['y']);
 			for(int k = 0; k < 3; k++) 
 			{
-				e0.set(v1->xyz[k] - v0->xyz[k], 'x');
-				e1.set(v2->xyz[k] - v0->xyz[k], 'y');
+				e0.set(v1->xyz[k + 'x'] - v0->xyz[k + 'x'], 'x');
+				e1.set(v2->xyz[k + 'x'] - v0->xyz[k + 'x'], 'y');
 				Vector3 v = Vector3::Cross(e0, e1);
 
-				if(std::fabs(v[0]) > MATH_EPSILON) 
+				if(std::fabs(v['x']) > MATH_EPSILON) 
 				{
-					tangent.set (-v[1] / v[0], k + 'x');
-					binormal.set(-v[2] / v[0], k + 'x');
+					tangent.set (-v['y'] / v['x'], k + 'x');
+					binormal.set(-v['z'] / v['x'], k + 'x');
 				} 
 				else 
 				{
@@ -442,10 +450,19 @@ void Mesh::addSurface(const char *name, Vertex *vertex, int num_vertex)
 	//TODO: check whether std::string can be directly converted with cstring
 	s->name = name;
 	
+	//copy vertex
 	s->num_vertex = num_vertex;
 	s->vertex = new Vertex[s->num_vertex];
+	memcpy(s->vertex, vertex, sizeof(Vertex) * s->num_vertex);
 
-	memcpy(s->vertex,vertex, sizeof(Vertex) * s->num_vertex);
+	//copy cvertex
+	s->num_cvertex = num_vertex;
+	s->cvertex     = new Vector3[s->num_cvertex];
+	//generate from vertex unrolling
+	for(int q = 0; q < s->num_cvertex; q++)
+	{
+		s->cvertex[q] = s->vertex[q].xyz;
+	}
 
 	/*if(num_surfaces == NUM_SURFACES) 
 	{
@@ -465,6 +482,9 @@ void Mesh::addSurface(Mesh *mesh, int surface_id)
 	s->vertex = new Vertex[s->num_vertex];
 	memcpy(s->vertex,mesh->surfaces_[surface_id]->vertex,sizeof(Vertex) * s->num_vertex);
 
+	s->cvertex = new Vector3[s->num_cvertex];
+	memcpy(s->cvertex, mesh->surfaces_[surface_id]->cvertex, sizeof(Vector3) * s->num_cvertex);
+	
 	if(mesh->surfaces_[surface_id]->edges) 
 	{
 		s->edges = new Edge[s->num_edges];
@@ -485,7 +505,7 @@ void Mesh::addSurface(Mesh *mesh, int surface_id)
 	create_mesh_bounds();
 }
 
-const Vector3& Mesh::getMin(int surface_id)
+const Vector3 Mesh::getMin( int surface_id /*= -1*/ )
 {
 	if(surface_id < 0)
 	{
@@ -497,7 +517,7 @@ const Vector3& Mesh::getMin(int surface_id)
 	}
 }
 
-const Vector3& Mesh::getMax(int surface_id)
+const Vector3 Mesh::getMax( int surface_id /*= -1*/ )
 {
 	if(surface_id < 0)
 	{
@@ -509,7 +529,7 @@ const Vector3& Mesh::getMax(int surface_id)
 	}
 }
 
-const Vector3& Mesh::getCenter(int surface_id)
+const Vector3 Mesh::getCenter( int surface_id /*= -1*/ )
 {
 	if(surface_id < 0)
 	{

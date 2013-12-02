@@ -31,7 +31,7 @@ public:
 		return pos_.getBoundingRadius();;
 	}
 
-	inline const Vector3& pos() const
+	inline const Vector3 pos() const
 	{
 		return pos_.getPosCoord();
 	}

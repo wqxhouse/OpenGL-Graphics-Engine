@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include "assert.h"
+#include "BasicMath.h"
 
 Vector3::Vector3(float x, float y, float z)
 {
@@ -229,10 +230,11 @@ void Vector3::normalize()
 {
 	float length = getLength();
 
-	if(length == 0.0f)
-	{
-		assert(false);
-	}
+	//if(length == 0.0f)
+	//{
+	//	//assert(false);
+
+	//}
 
 	if(length == 1)
 	{
@@ -240,7 +242,15 @@ void Vector3::normalize()
 	}
 
 	// mul since div is expensive
-	float factor = 1.0f/length;
+	float factor = MATH_INF;
+	if(length == 0.0f)
+	{
+		factor = MATH_INF;
+	}
+	else
+	{
+		factor = 1.0f/length;
+	}
 	m_x *= factor;
 	m_y *= factor;
 	m_z *= factor;

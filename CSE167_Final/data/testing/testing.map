@@ -1,0 +1,27 @@
+<path>
+data/testing/,
+data/testing/meshes/,
+data/testing/textures/,
+data/testing/materials/,
+data/testing/shaders/
+
+
+<data>
+bsp 
+{
+	mesh 	testing.obj
+}
+
+mesh
+{
+	mesh		data/testing/meshes/testing.obj
+	material 	*	default.mat
+	pos { 0 0 0 }
+}
+
+light 
+{
+	pos { 3 3 3 }
+	color 0.7 0.7 0.7 1.0
+	radius 20
+}

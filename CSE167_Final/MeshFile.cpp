@@ -22,7 +22,7 @@ int MeshFileOBJ::load(const char *name)
 	file.open(name, std::ios::binary | std::ios::in);
 	if(file.fail())
 	{
-		assert(false && "MeshFileOBJ::load(): can't open \"%s\" file\n", name);
+		assert(false && "MeshFileOBJ::load(): can't open file\n");
 		return 0;
 	}
 	
@@ -42,7 +42,7 @@ int MeshFileOBJ::load(const char *name)
 		if(!strncmp(s,"v ",2)) 
 		{
 			float x, y, z;
-			sscanf(s + 2,"%f %f %f\n", x, y, z);
+			sscanf(s + 2,"%f %f %f\n", &x, &y, &z);
 			vertices.push_back(Vector3(x, y, z));
 		}
 		
@@ -50,7 +50,7 @@ int MeshFileOBJ::load(const char *name)
 		else if(!strncmp(s,"vt ",3))
 		{
 			float u, v;
-			sscanf(s + 3,"%f %f\n", u, v);
+			sscanf(s + 3,"%f %f\n", &u, &v);
 			texcoords.push_back(Vector3(u, v, 0));
 		}
 		
@@ -58,7 +58,7 @@ int MeshFileOBJ::load(const char *name)
 		else if(!strncmp(s,"vn ",3)) 
 		{
 			float x, y, z;
-			sscanf(s + 3,"%f %f %f\n", x, y, z);
+			sscanf(s + 3,"%f %f %f\n", &x, &y, &z);
 			normals.push_back(Vector3(x, y, z));
 		}
 		

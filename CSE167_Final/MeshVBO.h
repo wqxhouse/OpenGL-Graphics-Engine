@@ -4,8 +4,6 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include <GL/gl.h>
-#include <GL/glext.h>
 #include "MeshFileObj.h"
 
 class MeshVBO
@@ -20,6 +18,6 @@ public:
 	virtual int render(int pplShading = 0, int surface_id = -1);
 
 protected:
-	std::vector<GLuint> vbo_id_;
+	std::vector<unsigned int> vbo_id_;
 };
 

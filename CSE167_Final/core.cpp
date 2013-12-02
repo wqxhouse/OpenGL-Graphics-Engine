@@ -1,4 +1,6 @@
 #include "core.h"
+#include <assert.h>
+
 #include "Light.h"
 #include "BSPTree.h"
 #include "Fog.h"
@@ -11,7 +13,8 @@
 #include "Texture.h"
 #include "MeshVBO.h"
 #include "MeshFileObj.h"
-#include <assert.h>
+#include <glut/glut.h>
+
 // screen
 int Core::win_width_;
 int Core::win_height_;
@@ -28,7 +31,7 @@ std::vector<Light*> Core::visible_lights_;
 Light *Core::curr_light_;
 
 int Core::o_query_id_;
-bool Core::have_occlusion_;
+bool Core::support_occlusion_;
 
 int Core::num_triangles_;
 std::vector<char*> Core::defines_;
@@ -65,11 +68,7 @@ std::map<std::string, Material*> Core::materials_;
 std::map<std::string, Mesh*>     Core::meshes_;
 
 int Core::init(int win_width, int win_height)
-{
-#ifdef _WIN32
-	glext_init();
-#endif
-		
+{		
 	win_width_  = win_width;
 	win_height_ = win_height;
 
@@ -82,6 +81,9 @@ int Core::init(int win_width, int win_height)
 	render_wires_ = false;
 	render_shadow_= true;
 	scissor_test_ = true;
+
+	//assume my laptop's x4500 is ok with occ query
+	support_occlusion_ = true;
 	
 	time_ = 0;
 	curr_frame_ = 0;
@@ -417,7 +419,7 @@ void Core::render_light()
 {
 	glDepthMask(GL_FALSE);
 	
-	if(have_occlusion_) 
+	if(support_occlusion_) 
 	{
 		glDisable(GL_CULL_FACE);
 		glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
@@ -440,7 +442,7 @@ void Core::render_light()
 				continue;
 			}
 			
-			if(have_occlusion_ && (l->pos() - camera_.getPosCoord()).getLength() > l->radius()) 
+			if(support_occlusion_ && (l->pos() - camera_.getPosCoord()).getLength() > l->radius()) 
 			{
 				glPushMatrix();
 				glTranslatef(
@@ -464,7 +466,7 @@ void Core::render_light()
 		}
 	}
 	
-	if(have_occlusion_) 
+	if(support_occlusion_) 
 	{
 		glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
 		glEnable(GL_CULL_FACE);

@@ -41,11 +41,11 @@ public:
 	virtual int getSurface(const char *name) = 0;
 
 	//bbox
-	virtual const Vector3 &getMin(int surface_id = -1) = 0;
-	virtual const Vector3 &getMax(int surface_id = -1) = 0;
+	virtual const Vector3 getMin(int surface_id = -1) = 0;
+	virtual const Vector3 getMax(int surface_id = -1) = 0;
 
 	//bsphere
-	virtual const Vector3 &getCenter(int surface_id = -1) = 0;
+	virtual const Vector3 getCenter(int surface_id = -1) = 0;
 	virtual float getRadius(int surface_id = -1) = 0;
 
 	void setRigidBody(RigidBody *rigidbody);

@@ -2,10 +2,13 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <glut/glut.h>
+#ifdef _WIN32
+#include "GLee.h"
+#endif
+
 #include "Frustum.h"
 #include "Position.h"
-#include "glext.h"
+
 
 
 class Object;
@@ -57,7 +60,7 @@ public:
 
 	static void render_light();
 
-	static bool have_occlusion_;
+	static bool support_occlusion_;
 	static int o_query_id_;
 
 	// screen

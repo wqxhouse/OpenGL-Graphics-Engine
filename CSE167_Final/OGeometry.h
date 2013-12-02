@@ -26,10 +26,10 @@ public:
 	virtual const std::string getSurfaceName(int surface_id) ;
 	virtual int getSurface(const char *name) ;
 
-	virtual const Vector3 &getMin(int surface_id = -1) ;
-	virtual const Vector3 &getMax(int surface_id = -1) ;
+	virtual const Vector3 getMin(int surface_id = -1) ;
+	virtual const Vector3 getMax(int surface_id = -1) ;
 
-	virtual const Vector3 &getCenter(int surface_id = -1) ;
+	virtual const Vector3 getCenter(int surface_id = -1) ;
 	virtual float getRadius(int surface_id = -1) ;
 
 	Mesh *mesh_;

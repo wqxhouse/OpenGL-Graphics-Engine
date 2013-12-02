@@ -508,12 +508,12 @@ void Sector::getNodeObjects(Node *node)
  */
 void Sector::create() 
 {
-	objects_.resize(NUM_OBJECTS);
+	//objects_.resize(NUM_OBJECTS);
 	//fill node_objects_
 	getNodeObjects(root);
 	
-	visible_objects_.resize(node_objects_.size()     + NUM_OBJECTS);
-	old_visible_objects_.resize(node_objects_.size() + NUM_OBJECTS);
+	/*visible_objects_.resize(node_objects_.size()     + NUM_OBJECTS);
+	old_visible_objects_.resize(node_objects_.size() + NUM_OBJECTS);*/
 }
 
 /*
@@ -646,7 +646,7 @@ void Sector::render(Portal *portal)
 		if(Core::frustum_->inside(p->bsphere_.getCenter().getVector3(), p->bsphere_.getRadius())) {
 			float dist = (Core::camera_.getPosCoord() - p->bsphere_.getCenter().getVector3()).getLength();
 			
-			if(Core::have_occlusion_ && dist > p->bsphere_.getRadius()) 
+			if(Core::support_occlusion_ && dist > p->bsphere_.getRadius()) 
 			{
 				if(Material::old_material_)
 				{
@@ -758,6 +758,8 @@ void BSPTree::load(const char *name)
 	objmesh.load(name);
 	Mesh *mesh = new Mesh(objmesh);
 	
+	//potential duplication of code
+	//ref: Mesh ctor, Mesh::addSurface()
 	mesh->create_mesh_bounds();
 	mesh->create_tangent();
 
@@ -810,16 +812,18 @@ void BSPTree::load(const char *name)
 				usage_flag[i] = 0;
 			}
 		}
-		
-		for(int i = 0; i < num_portals; i++)
+
+		//initialize array, but contradict with push_back()
+		/*for(int i = 0; i < num_portals; i++)
 		{
-			portals_[i].sectors_.resize(num_sectors);
+		portals_[i].sectors_.resize(num_sectors);
 		}
 
 		for(int i = 0; i < num_sectors; i++)
 		{
-			sectors_[i].portals_.resize(num_portals);
-		}
+		sectors_[i].portals_.resize(num_portals);
+		}*/
+
 		
 		for(int i = 0; i < num_sectors; i++) 
 		{
@@ -831,6 +835,7 @@ void BSPTree::load(const char *name)
 				{
 					p->sectors_.push_back(i);
 					s->portals_.push_back(j);
+
 					/*	p->sectors_[p->num_sectors++] = i;
 					s->portals_[s->num_portals++] = j;*/
 				}
@@ -859,8 +864,8 @@ void BSPTree::load(const char *name)
 		delete mesh;
 	}
 	
-	visible_sectors_.resize(num_sectors);
-	old_visible_sectors_.resize(num_sectors);
+	//visible_sectors_.resize(num_sectors);
+	//old_visible_sectors_.resize(num_sectors);
 	
 	printf("sectors %d\nportals %d\n",num_sectors,num_portals);
 }

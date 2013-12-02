@@ -140,6 +140,7 @@ int Frustum::inside_plane(const Vector4 &plane, const Vector3 &min, const Vector
 	if(max_min_xy + max_zw > 0.0f) return 1;
 	if(min_max_xy + max_zw > 0.0f) return 1;
 	if(max_max_xy + max_zw > 0.0f) return 1;
+	return 0;
 }
 
 

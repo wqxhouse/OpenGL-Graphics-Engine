@@ -14,7 +14,6 @@ Position::Position(const Vector3 &pos)
 Position::~Position() 
 {
 	if(spline_) delete spline_;
-	if(expression_) delete expression_;
 	sectors_.clear();
 }
 

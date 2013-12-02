@@ -4,14 +4,15 @@
 #include <stdarg.h>
 #include <windows.h>
 #include <assert.h>
-#include <glut/glut.h>
 
+#include "core.h"
+
+#include <glut/glut.h>
 #include "Vector3.h"
 #include "Matrix4.h"
 #include "OParticles.h"
 #include "Collision.h"
 #include "Light.h"
-#include "Core.h"
 
 int win_x;
 int win_y;
@@ -63,6 +64,7 @@ static void initVars()
 	view_pos = Vector3(-0.79,2.58,0.67);
 	speed    = Vector3(0, 0, 0);
 	time = 0;
+	fps = 60;
 
 	mouseX = 0;
 	mouseY = 0;
@@ -72,16 +74,17 @@ static void initVars()
 	int isInit = Core::init(win_x, win_y);
 	assert(isInit && "Core::init failed()");
 
-	Core::AddDirectoryPath( "res/,"
-							"res/textures/,"
-							"res/textures/cube/,"
-							"res/materials/,"
-							"res/shaders/,"
-							"res/meshes/");
+	Core::AddDirectoryPath(
+		"data/engine/,"
+		"data/textures/,"
+		"data/textures/cube/,"
+		"data/materials/,"
+		"data/shaders/,"
+		"data/meshes/,"
+		"data/testing/");
 
-	Core::LoadScene("physic.mat");
+	Core::LoadScene("testing.map");
 	printf("Scene Load Completed...\n");
-	
 }
 
 static int getTime() 
@@ -99,6 +102,13 @@ static int getTime()
 
 static void display()
 {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-10, 10, -10, 10, -10, 10);
+
+	glMatrixMode(GL_MODELVIEW);
+	Core::Update(spf);
+	Core::RenderScene(spf);
 	glutSwapBuffers();
 }
 
@@ -181,7 +191,7 @@ int main(int argc, char *argv[])
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(specialKey);
 	glutReshapeFunc(reshape);
-	//glutIdleFunc(idle);
+	glutIdleFunc(idle);
 
 	glutMouseFunc(mouse);
 	glutMotionFunc(mouseMotion);

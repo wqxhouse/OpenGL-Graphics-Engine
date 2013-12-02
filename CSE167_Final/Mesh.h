@@ -54,7 +54,6 @@ public:
 	};
 
 	Mesh(void);
-	explicit Mesh(const Mesh *mesh);
 	explicit Mesh(const MeshFileOBJ &objmesh);
 	virtual ~Mesh(void);
 
@@ -76,13 +75,14 @@ public:
 	int getNumTriangles(int s) const;
 	Triangle *getTriangles(int s) const;
 
+
 	// vertices
 	virtual int getNumVertex(int surface_id) const;
 	virtual Vertex *getVertex(int surface_id) const;
 
-	const Vector3 &getMin(int surface_id = -1);
-	const Vector3 &getMax(int surface_id = -1);
-	const Vector3 &getCenter(int surface_id = -1);
+	const Vector3 getMin(int surface_id = -1);
+	const Vector3 getMax(int surface_id = -1);
+	const Vector3 getCenter(int surface_id = -1);
 	float getRadius(int surface_id = -1);
 
 	void addSurface(const char *name, Vertex *vertex, int num_vertex);
@@ -113,6 +113,8 @@ public:
 	
 
 protected:
+	explicit Mesh(const Mesh *mesh);
+
 	BBox bbox_;					// mesh bounds
 	BSphere bsphere_;
 

@@ -22,7 +22,7 @@ OGeometry::OGeometry(const char *filename)
 	//TODO: fill meshobj
 	MeshFileOBJ objfile;
 	objfile.load(filename);
-	*mesh_ = Mesh(objfile);
+	mesh_ = new Mesh(objfile);
 
 	materials_.resize(getNumSurfaces());
 	frames_.resize(getNumSurfaces());
@@ -96,17 +96,17 @@ int OGeometry::getSurface(const char *name)
 
 /*
  */
-const Vector3 &OGeometry::getMin(int surface_id) 
+const Vector3 OGeometry::getMin(int surface_id) 
 {
 	return mesh_->getMin(surface_id);
 }
 
-const Vector3 &OGeometry::getMax(int surface_id) 
+const Vector3 OGeometry::getMax(int surface_id) 
 {
 	return mesh_->getMax(surface_id);
 }
 
-const Vector3 &OGeometry::getCenter(int surface_id) 
+const Vector3 OGeometry::getCenter(int surface_id) 
 {
 	return mesh_->getCenter(surface_id);
 }

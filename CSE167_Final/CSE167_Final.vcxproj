@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\CSE167_Homework\CSE167\GLee.c" />
     <ClCompile Include="BasicMath.cpp" />
     <ClCompile Include="Bounds.cpp" />
     <ClCompile Include="BSPTree.cpp" />
@@ -18,7 +19,6 @@
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="core.cpp" />
     <ClCompile Include="Frustum.cpp" />
-    <ClCompile Include="glext.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
@@ -47,7 +47,7 @@
     <ClInclude Include="Collision.h" />
     <ClInclude Include="core.h" />
     <ClInclude Include="Frustum.h" />
-    <ClInclude Include="glext.h" />
+    <ClInclude Include="GLee.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix4.h" />
@@ -117,8 +117,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)externs\glut\glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/nodefaultlib:libcmt.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>$(SolutionDir)externs\glut\glut32.lib;glu32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/nodefaultlib:libcmt.lib /nodefaultlib:libcmtd.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)externs\glut\glut32.dll" "$(OutDir)" /Q /Y</Command>
