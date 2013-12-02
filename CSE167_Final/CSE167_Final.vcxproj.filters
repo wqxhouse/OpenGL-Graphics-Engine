@@ -84,13 +84,7 @@
     <ClCompile Include="Light.cpp">
       <Filter>源文件\objects</Filter>
     </ClCompile>
-    <ClCompile Include="Fog.cpp">
-      <Filter>源文件\objects</Filter>
-    </ClCompile>
     <ClCompile Include="Matrix4.cpp">
-      <Filter>源文件\math</Filter>
-    </ClCompile>
-    <ClCompile Include="Vector4.cpp">
       <Filter>源文件\math</Filter>
     </ClCompile>
     <ClCompile Include="Vector3.cpp">
@@ -112,9 +106,6 @@
       <Filter>源文件\scene</Filter>
     </ClCompile>
     <ClCompile Include="OGeometry.cpp">
-      <Filter>源文件\objects</Filter>
-    </ClCompile>
-    <ClCompile Include="OParticles.cpp">
       <Filter>源文件\objects</Filter>
     </ClCompile>
     <ClCompile Include="Object.cpp">
@@ -150,15 +141,27 @@
     <ClCompile Include="RigidBody.cpp">
       <Filter>源文件\physics</Filter>
     </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>源文件\properties</Filter>
+    </ClCompile>
+    <ClCompile Include="Parser.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector4.cpp">
+      <Filter>源文件\math</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldFile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshVBO.cpp">
+      <Filter>源文件\primitives</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core.h">
       <Filter>头文件\core</Filter>
     </ClInclude>
     <ClInclude Include="Light.h">
-      <Filter>头文件\objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Fog.h">
       <Filter>头文件\objects</Filter>
     </ClInclude>
     <ClInclude Include="Matrix4.h">
@@ -191,9 +194,6 @@
     <ClInclude Include="OGeometry.h">
       <Filter>头文件\objects</Filter>
     </ClInclude>
-    <ClInclude Include="OParticles.h">
-      <Filter>头文件\objects</Filter>
-    </ClInclude>
     <ClInclude Include="Collision.h">
       <Filter>头文件\properties</Filter>
     </ClInclude>
@@ -224,5 +224,20 @@
     <ClInclude Include="Position.h">
       <Filter>头文件\scene</Filter>
     </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>头文件\properties</Filter>
+    </ClInclude>
+    <ClInclude Include="Parser.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WorldFile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshVBO.h">
+      <Filter>头文件\primitives</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
 </Project>

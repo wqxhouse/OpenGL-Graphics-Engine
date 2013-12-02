@@ -11,7 +11,15 @@ Matrix4::Matrix4()
 	loadIdentity();
 }
 
-//Row Major Matrix - conforms to DirectX standard
+Matrix4::Matrix4(const float *m) 
+{
+	m_entries[0] = m[0]; m_entries[4] = m[4]; m_entries[8] = m[8]; m_entries[12] = m[12];
+	m_entries[1] = m[1]; m_entries[5] = m[5]; m_entries[9] = m[9]; m_entries[13] = m[13];
+	m_entries[2] = m[2]; m_entries[6] = m[6]; m_entries[10] = m[10]; m_entries[14] = m[14];
+	m_entries[3] = m[3]; m_entries[7] = m[7]; m_entries[11] = m[11]; m_entries[15] = m[15];
+}
+
+//needs to input in the order of column matrix
 Matrix4::Matrix4(
 	float m11, float m12, float m13, float m14,
 	float m21, float m22, float m23, float m24,
@@ -537,4 +545,23 @@ Matrix4 Matrix4::getInverse() const
 	 1.0);
 
 	return ret;
+}
+
+Matrix4 Matrix4::getRotationPart() const
+{
+	return Matrix4(
+		m_entries[0], 
+		m_entries[1], 
+		m_entries[2], 
+		0,
+		m_entries[4], 
+		m_entries[5], 
+		m_entries[6], 
+		0, 
+		m_entries[8], 
+		m_entries[9], 
+		m_entries[10], 
+		0, 
+		0, 0, 0, 1);
+		
 }

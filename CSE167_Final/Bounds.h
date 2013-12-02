@@ -82,6 +82,17 @@ public:
 	void clear();
 
 	void set(const Vector3 &center,float radius);
+	inline void setCenter(const Vector3 &center)
+	{
+		center_.set(center['x'], 'x');
+		center_.set(center['y'], 'y');
+		center_.set(center['z'], 'z');
+	}
+
+	inline void setRadius(float radius)
+	{
+		center_.set(radius, 'w');
+	}
 	void setTransform(const Matrix4 &transform);
 
 	//// compare

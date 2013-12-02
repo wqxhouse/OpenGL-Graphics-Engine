@@ -51,8 +51,8 @@ void BBox::expand(const BBox &bb)
 	{
 		if(isValid()) 
 		{
-			min_ = std::min(min_,bb.getMin());
-			max_ = std::max(max_,bb.getMax());
+			min_ = BasicMath::getVecMin(min_,bb.getMin());
+			max_ = BasicMath::getVecMax(max_,bb.getMax());
 		} 
 		else 
 		{
@@ -68,8 +68,8 @@ void BBox::expand(const Vector3 *verticesCoords,int num_vcoords)
 	{
 		BasicMath::VertexMinMax min_max 
 			 = BasicMath::calculateMinMaxFromVertices(verticesCoords, num_vcoords);
-		min_ = std::min(min_,min_max.first);
-		max_ = std::max(max_,min_max.second);
+		min_ = BasicMath::getVecMin(min_,min_max.first);
+		max_ = BasicMath::getVecMax(max_,min_max.second);
 	} 
 	else 
 	{

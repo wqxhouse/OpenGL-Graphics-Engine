@@ -31,10 +31,10 @@ public:
 	//Overload operator '-' for subtraction
 	Vector4 operator - (const Vector4 &v);
 
-	float dot(const Vector4 v) const;
-	float operator * (const Vector4 v) const;
-
-	Vector4 scale(const Vector4 &v) const;
+	float dot(const Vector4 &v) const;
+	float operator * (const Vector4 &v) const;
+	float dotVec3(const Vector3 &v) const;
+	Vector4 scale(float factor) const;
 
 	Vector3 getVector3() const;
 	void setVector3(const Vector3 &v);
@@ -47,14 +47,21 @@ public:
 	//Print (display the point's components numerically on the screen)
 	void print() const;
 	static void Print(Vector4 &v);
+	static Vector4 Scale(const Vector4 &v, float factor);
+
 
 	// Constructors ////////////////////
 	Vector4();
+	Vector4(const Vector3 &v, float w);
 
 	//A constructor with three (or four, optionally) parameters for the point coordinates
 	Vector4(float x, float y, float z);
 	Vector4(float x, float y, float z, float w);
 
+	inline const float *getPointer() const
+	{
+		return &m_x;
+	}
 
 	~Vector4();
 

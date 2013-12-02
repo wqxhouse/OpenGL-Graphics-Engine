@@ -3,11 +3,16 @@
 #include "Matrix4.h"
 #include "Vector3.h"
 #include "Vector4.h"
-#include "BSPTree.h"
 
 class Frustum
 {
 public:
+	struct PortalFrustum 
+	{
+		Vector4 plane;							// portal plane
+		Vector4 clip_planes[4];				    // clip planes
+		Vector3 points[4];						// bounding points
+	};
 
 	Frustum();
 	~Frustum();
@@ -15,17 +20,25 @@ public:
 	void applyCurrProjMVMat();
 	void set(const Matrix4 &m);
 
-	void addPortal(const Vector3 &point,const Vector3 *points);
+	int addPortal(const Vector3 *points);
 	void removePortal();
 
-	//int inside(const Vector3 &min, const Vector3 &max);
-	int inside(const Vector3 &point, float radius);
-	int inside(const Vector3 *points, int num);
+	int inside(const Vector3 &min, const Vector3 &max) const;
+	int inside(const Vector3 &point, float radius) const;
+	int inside(const Vector3 *points, int num) const;
 
-	int inside_portal(const Portal &p, const Vector3 &point, float radius);
+	int inside_portal(const PortalFrustum &p, const Vector3 *points, int num_points) const;
+	int inside_portal(const PortalFrustum &p, const Vector3 &point, float radius) const;
+	int inside_portal(const PortalFrustum &p, const Vector3 &min, const Vector3 &max) const;
+	int inside_frustum_planes(const Vector3 *points, int num_points) const;
+	int inside_frustum_planes(const Vector3 &point, float radius) const;
+	int inside_frustum_planes(const Vector3 &min , const Vector3 &max) const;
+	int inside_plane(const Vector4 &plane, const Vector3 *points, int num) const;
+	int inside_plane(const Vector4 &plane, const Vector3 &min, const Vector3 &max) const;
 	/*int inside(const Vector3 &light, float light_radius, const Vector3 &center, float radius);
 	int inside_all(const Vector3 &min,const Vector3 &max);
 	int inside_all(const Vector3 &center,float radius);*/
+
 
 protected:
 
@@ -39,18 +52,8 @@ protected:
 		PLANE_FAR
 	};
 
-	struct Portal 
-	{
-		vec4 plane;							// portal plane
-		vec4 planes[4];						// clip planes
-		vec4 planes_x;						// clip planes x
-		vec4 planes_y;						// clip planes y
-		vec4 planes_z;						// clip planes z
-		vec4 planes_w;						// clip planes w
-		vec3 points[4];						// bounding points
-	};
-
 	std::vector<Vector4> planes_;
+	std::vector<PortalFrustum> portals_;
 
 	void extractPlanes(
 		std::vector<Vector4> *p_planes,

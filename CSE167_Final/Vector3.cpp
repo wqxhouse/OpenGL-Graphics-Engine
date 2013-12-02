@@ -20,6 +20,10 @@ Vector3::~Vector3()
 {
 
 }
+Vector3::Vector3(const Vector3 &v)
+{
+	*this = v;
+}
 
 float Vector3::angle(const Vector3 &v) const
 {

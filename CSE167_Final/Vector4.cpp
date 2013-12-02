@@ -32,6 +32,14 @@ Vector4::~Vector4()
 
 }
 
+Vector4::Vector4(const Vector3 &v, float w)
+{
+	m_x = v['x'];
+	m_y = v['y'];
+	m_z = v['z'];
+	m_w = w;
+}
+
 // Methods ///////////////////
 
 //Element access 'set': set the (four) point coordinates
@@ -201,12 +209,12 @@ void Vector4::normalizePlane()
 }
 
 
-float Vector4::dot(const Vector4 v) const
+float Vector4::dot(const Vector4 &v) const
 {
 	return m_x * v.m_x + m_y * v.m_y + m_z * v.m_z + m_w * v.m_w;
 }
 
-float Vector4::operator * (const Vector4 v) const
+float Vector4::operator * (const Vector4 &v) const
 {
 	return dot(v);
 }
@@ -223,7 +231,7 @@ void Vector4::setVector3(const Vector3 &v)
 	m_z = v.get('z');
 }
 
-Vector4 Vector4::scale(const Vector4 &v) const
+Vector4 Vector4::Scale(const Vector4 &v, float factor)
 {
 	float x = factor * v.m_x;
 	float y = factor * v.m_y;
@@ -231,4 +239,18 @@ Vector4 Vector4::scale(const Vector4 &v) const
 	float w = factor * v.m_w;
 
 	return Vector4(x, y, z, w);
+}
+
+Vector4 Vector4::scale(float factor) const
+{
+	float x = factor * m_x;
+	float y = factor * m_y;
+	float z = factor * m_z;
+	float w = factor * m_w;
+	return Vector4(x, y, z, w);
+}
+
+float Vector4::dotVec3(const Vector3 &v) const
+{
+	return m_x * v['x'] + m_y * v['y'] + m_z * v['z'] + m_w;
 }

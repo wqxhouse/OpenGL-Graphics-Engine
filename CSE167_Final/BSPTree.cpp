@@ -4,6 +4,9 @@
 #include "OGeometry.h"
 #include "assert.h"
 #include "core.h"
+#include "MeshFileObj.h"
+#include "BasicMath.h"
+#include "Material.h"
 
 
 /*****************************************************************************/
@@ -27,6 +30,7 @@ Node::~Node()
 	{
 		delete left_;
 	}
+
 	if(right_)
 	{
 		delete right_;
@@ -173,11 +177,11 @@ void Node::create(Mesh *mesh)
 			}
 			if(left_mesh_num_vertex > 0)
 			{
-				left_mesh->addSurface(mesh->getSurfaceName(i),left_mesh_vertex,left_mesh_num_vertex);
+				left_mesh->addSurface(mesh->getSurfaceName(i).c_str(), left_mesh_vertex, left_mesh_num_vertex);
 			}
 			if(right_mesh_num_vertex > 0)
 			{
-				right_mesh->addSurface(mesh->getSurfaceName(i),right_mesh_vertex,right_mesh_num_vertex);
+				right_mesh->addSurface(mesh->getSurfaceName(i).c_str(), right_mesh_vertex, right_mesh_num_vertex);
 			}
 			delete right_mesh_vertex;
 			delete left_mesh_vertex;
@@ -222,41 +226,52 @@ void Node::create(Mesh *mesh)
  */
 void Node::bindMaterial(const char *name, Material *material) 
 {
-	if(left) left->bindMaterial(name, material);
-	if(right) right->bindMaterial(name, material);
-	if(object) object->bindMaterial(name, material);
+	if(left_)
+	{
+		left_->bindMaterial(name, material);
+	}
+	if(right_)
+	{
+		right_->bindMaterial(name, material);
+	}
+	if(object_)
+	{
+		object_->bindMaterial(name, material);
+	}
 }
 
 /*
  */
 void Node::render() 
 {
-	if(left && right) 
+	if(left_ && right_) 
 	{
-		int check_left = Engine::frustum->inside(left->center,left->radius);
-		int check_right = Engine::frustum->inside(right->center,right->radius);
+		int check_left = Core::frustum_->inside(left_->bsphere_.getCenter().getVector3(), left_->bsphere_.getRadius());
+		int check_right = Core::frustum_->inside(right_->bsphere_.getCenter().getVector3(), right_->bsphere_.getRadius());
 		if(check_left && check_right) 
 		{
-			if((left->center - Engine::camera).length() < (right->center - Engine::camera).length()) 
+			if((left_->bsphere_.getCenter().getVector3() - Core::camera_.getPosCoord()).getLength() 
+			< (right_->bsphere_.getCenter().getVector3() - Core::camera_.getPosCoord()).getLength())
 			{
-				left->render();
-				right->render();
-			} else 
+				left_->render();
+				right_->render();
+			} 
+			else 
 			{
-				right->render();
-				left->render();
+				right_->render();
+				left_->render();
 			}
 			return;
 		}
-		if(check_left) left->render();
-		else if(check_right) right->render();
+		if(check_left) left_->render();
+		else if(check_right) right_->render();
 		return;
 	}
-	if(object && object->frame != Engine::frame) 
+	if(object_ && object_->frame_ != Core::curr_frame_) 
 	{
-		Sector *s = BSPTree::visible_sectors[BSPTree::num_visible_sectors - 1];
-		s->visible_objects[s->num_visible_objects++] = object;
-		Engine::num_triangles += object->render(Object::RENDER_OPACITY);
+		Sector *s = BSPTree::visible_sectors_.back();
+		s->visible_objects_.push_back(object_);
+		Core::num_triangles_ += object_->render();
 	}
 }
 
@@ -333,7 +348,7 @@ void Portal::create(Mesh *mesh, int surface_id)
 
 void Portal::getScissor(int *scissor) 
 {
-	if((bsphere_.getCenter().getVector3() - Core::camera_).getLength() < bsphere_.getRadius()) 
+	if((bsphere_.getCenter().getVector3() - Core::camera_.getPosCoord()).getLength() < bsphere_.getRadius()) 
 	{
 		scissor[0] = Core::viewport_[0];
 		scissor[1] = Core::viewport_[1];
@@ -353,8 +368,8 @@ void Portal::getScissor(int *scissor)
 	p[2] = p[2].scale(1.0f / p[2]['w']);
 	p[3] = p[3].scale(1.0f / p[3]['w']);
 
-	Vector3 min = Vec3_INF;
-	Vector3 max = Vec3_INF.negate();
+	Vector3 min = BasicMath::Vec3_INF;
+	Vector3 max = min.negate();
 	for(int i = 0; i < 4; i++) 
 	{
 		if(min['x'] > p[i]['x']) min.set(p[i]['x'], 'x');
@@ -408,10 +423,10 @@ void Portal::getScissor(int *scissor)
 void Portal::render() {
 	glBegin(GL_QUADS);
 	{
-		glVertex3fv(points_[0]);
-		glVertex3fv(points_[1]);
-		glVertex3fv(points_[2]);
-		glVertex3fv(points_[3]);
+		glVertex3fv(points_[0].getPointer());
+		glVertex3fv(points_[1].getPointer());
+		glVertex3fv(points_[2].getPointer());
+		glVertex3fv(points_[3].getPointer());
 	}
 	glEnd();
 }
@@ -444,18 +459,16 @@ Sector::~Sector()
 	if(root) delete root;
 	if(portal_) delete portal_;
 	if(old_portal_) delete old_portal_;
-	for(int i = 0; i < node_objects_.size(); i++)
+	/*for(int i = 0; i < node_objects_.size(); i++)
 	{
-		delete node_objects_[i];
-	}
-	for(int i = 0; i < visible_objects_.size(); i++)
-	{
-		delete visible_objects_[i];
-	}
-	for(int i = 0; i < old_visible_objects_.size(); i++)
-	{
-		delete old_visible_objects_[i];
-	}
+	delete node_objects_[i];
+	}*/
+
+	//potential memory leak
+	//TODO: check all node_object reference
+	node_objects_.clear();
+	visible_objects_.clear();
+	old_visible_objects_.clear();
 }
 
 /*
@@ -509,7 +522,7 @@ int Sector::inside(const Vector3 &point)
 {
 	for(int i = 0; i < planes_.size(); i++) 
 	{
-		if(planes_[i].dot(Vector4(point['x'], point['y'], point['z'], 1) > 0.0))
+		if( planes_[i].dot(Vector4(point['x'], point['y'], point['z'], 1)) > 0.0 )
 		{
 			return 0;
 		}
@@ -631,7 +644,7 @@ void Sector::render(Portal *portal)
 		p->frame_ = Core::curr_frame_;
 
 		if(Core::frustum_->inside(p->bsphere_.getCenter().getVector3(), p->bsphere_.getRadius())) {
-			float dist = (Core::camera_ - p->bsphere_.getCenter().getVector3()).getLength();
+			float dist = (Core::camera_.getPosCoord() - p->bsphere_.getCenter().getVector3()).getLength();
 			
 			if(Core::have_occlusion_ && dist > p->bsphere_.getRadius()) 
 			{
@@ -660,7 +673,7 @@ void Sector::render(Portal *portal)
 			
 			if(dist > p->bsphere_.getRadius())
 			{
-				Core::frustum_->addPortal(Core::camera_.getPosCoord(), p->points_);
+				Core::frustum_->addPortal(p->points_);
 			}
 
 			for(int j = 0; j < p->sectors_.size(); j++) 
@@ -678,22 +691,27 @@ void Sector::render(Portal *portal)
 
 /*
  */
-void Sector::saveState() {
-	old_num_visible_objects = num_visible_objects;
-	for(int i = 0; i < num_visible_objects; i++) {
-		old_visible_objects[i] = visible_objects[i];
+void Sector::saveState() 
+{
+	old_visible_objects_.resize(visible_objects_.size());
+	for(int i = 0; i < old_visible_objects_.size(); i++) 
+	{
+		old_visible_objects_[i] = visible_objects_[i];
 	}
-	old_portal = portal;
-	old_frame = frame;
+	old_portal_ = portal_;
+	old_frame_ = frame_;
 }
 
-void Sector::restoreState(int frame) {
-	num_visible_objects = old_num_visible_objects;
-	for(int i = 0; i < num_visible_objects; i++) {
-		visible_objects[i] = old_visible_objects[i];
+void Sector::restoreState(int frame) 
+{
+	visible_objects_.resize(old_visible_objects_.size());
+	for(int i = 0; i < visible_objects_.size(); i++) 
+	{
+		visible_objects_[i] = old_visible_objects_[i];
 	}
-	portal = old_portal;
-	this->frame = frame;
+
+	portal_ = old_portal_;
+	frame_ = frame;
 }
 
 /*****************************************************************************/
@@ -702,39 +720,20 @@ void Sector::restoreState(int frame) {
 /*                                                                           */
 /*****************************************************************************/
 
-int BSPTree::num_portals;
-Portal *BSPTree::portals;
-int BSPTree::num_sectors;
-Sector *BSPTree::sectors;
-int BSPTree::num_visible_sectors;
-Sector **BSPTree::visible_sectors;
-int BSPTree::old_num_visible_sectors;
-Sector **BSPTree::old_visible_sectors;
+std::vector<Portal> BSPTree::portals_;
+std::vector<Sector> BSPTree::sectors_;
 
-BSPTree::BSPTree() {
-	num_portals = 0;
-	portals = NULL;
-	num_sectors = 0;
-	sectors = NULL;
-	num_visible_sectors = 0;
-	visible_sectors = NULL;
-	old_num_visible_sectors = 0;
-	old_visible_sectors = NULL;
+std::vector<Sector*> BSPTree::visible_sectors_;
+std::vector<Sector*> BSPTree::old_visible_sectors_;
+
+BSPTree::BSPTree() 
+{
 }
 
-BSPTree::~BSPTree() {
-	if(num_portals) delete [] portals;
-	num_portals = 0;
-	portals = NULL;
-	if(num_sectors) delete [] sectors;
-	num_sectors = 0;
-	sectors = NULL;
-	if(visible_sectors) delete visible_sectors;
-	num_visible_sectors = 0;
-	visible_sectors = NULL;
-	if(old_visible_sectors) delete old_visible_sectors;
-	old_num_visible_sectors = 0;
-	old_visible_sectors = NULL;
+BSPTree::~BSPTree()
+{
+	visible_sectors_.clear();
+	old_visible_sectors_.clear();
 }
 
 /*****************************************************************************/
@@ -745,126 +744,109 @@ BSPTree::~BSPTree() {
 
 /*
  */
-void BSPTree::load(const char *name) {
-	
-	if(strstr(name,".bsp")) {	// read own binary bsp format
-		
-		FILE *file = fopen(name,"rb");
-		if(!file) {
-			fprintf(stderr,"BSPTree::load(): error open \"%s\" file\n",name);
-			return;
-		}
-		
-		int magic;
-		fread(&magic,sizeof(int),1,file);
-		if(magic != BSP_MAGIC) {
-			fprintf(stderr,"BSPTree::load(): wrong magic in \"%s\" file\n",name);
-			fclose(file);
-			return;
-		}
-		
-		fread(&num_portals,sizeof(int),1,file);
-		portals = new Portal[num_portals];
-		for(int i = 0; i < num_portals; i++) {
-			Portal *p = &portals[i];
-			fread(&p->center,sizeof(Vector3),1,file);
-			fread(&p->radius,sizeof(float),1,file);
-			fread(&p->num_sectors,sizeof(int),1,file);
-			p->sectors = new int[p->num_sectors];
-			fread(p->sectors,sizeof(int),p->num_sectors,file);
-			fread(p->points,sizeof(Vector3),4,file);
-		}
-		
-		fread(&num_sectors,sizeof(int),1,file);
-		sectors = new Sector[num_sectors];
-		for(int i = 0; i < num_sectors; i++) {
-			Sector *s = &sectors[i];
-			fread(&s->center,sizeof(Vector3),1,file);
-			fread(&s->radius,sizeof(float),1,file);
-			fread(&s->num_portals,sizeof(int),1,file);
-			s->portals = new int[s->num_portals];
-			fread(s->portals,sizeof(int),s->num_portals,file);
-			fread(&s->num_planes,sizeof(int),1,file);
-			s->planes = new Vector4[s->num_planes];
-			fread(s->planes,sizeof(Vector4),s->num_planes,file);
-			s->root = new Node();
-			s->root->load(file);
-			s->create();
-		}
-		
-		fclose(file);
-		
-		//visible_sectors = new Sector*[num_sectors];
-		//old_visible_sectors = new Sector*[num_sectors];
-		
-		Engine::console->printf("sectors %d\nportals %d\n",num_sectors,num_portals);
-		
-		return;
-	}
-	
-	// else generate bsp tree with portals and sectors
-	Mesh *mesh = new Mesh();
-	if(strstr(name,".3ds")) mesh->load_3ds(name);
-	else if(strstr(name,".mesh")) mesh->load_mesh(name);
-	
-	mesh->calculate_bounds();
-	mesh->calculate_tangent();
+void BSPTree::load(const char *name) 
+{
+	int num_portals = 0;
+	int num_sectors = 0;
 
-	for(int i = 0; i < mesh->getNumSurfaces(); i++) {
-		const char *name = mesh->getSurfaceName(i);
-		if(!strncmp(name,"portal",6)) num_portals++;
-		else if(!strncmp(name,"sector",6)) num_sectors++;
+	if(!strstr(name, ".obj"))
+	{
+		assert(false && "not a obj file");
+	}
+
+	MeshFileOBJ objmesh;
+	objmesh.load(name);
+	Mesh *mesh = new Mesh(objmesh);
+	
+	mesh->create_mesh_bounds();
+	mesh->create_tangent();
+
+	for(int i = 0; i < mesh->getNumSurfaces(); i++) 
+	{
+		const char *name = mesh->getSurfaceName(i).c_str();
+		if(!strncmp(name,"portal",6))
+		{
+			num_portals++;
+		}
+		else if(!strncmp(name,"sector",6))
+		{
+			num_sectors++;
+		}
 	}
 	
-	if(num_portals == 0 || num_sectors == 0) {
-		
+	if(num_portals == 0 || num_sectors == 0) 
+	{
 		num_sectors = 1;
-		sectors = new Sector[1];
-		sectors[0].root = new Node();
-		sectors[0].root->create(mesh);
-		sectors[0].create();
-		
-	} else {
-		
-		portals = new Portal[num_portals];
-		sectors = new Sector[num_sectors];
+		sectors_.resize(1);
+		sectors_[0].root = new Node();
+		sectors_[0].root->create(mesh);
+		sectors_[0].create();
+	} 
+	else 
+	{
+		portals_.resize(num_portals);
+		sectors_.resize(num_sectors);
 		
 		int *usage_flag = new int[mesh->getNumSurfaces()];
 		
 		num_portals = 0;
 		num_sectors = 0;
-		for(int i = 0; i < mesh->getNumSurfaces(); i++) {
-			const char *name = mesh->getSurfaceName(i);
-			if(!strncmp(name,"portal",6)) {
-				portals[num_portals++].create(mesh,i);
+
+		for(int i = 0; i < mesh->getNumSurfaces(); i++) 
+		{
+			const char *name = mesh->getSurfaceName(i).c_str();
+			if(!strncmp(name,"portal",6)) 
+			{
+				portals_[num_portals++].create(mesh,i);
 				usage_flag[i] = 1;
-			} else if(!strncmp(name,"sector",6)) {
-				sectors[num_sectors++].create(mesh,i);
+			} 
+			else if(!strncmp(name,"sector",6))
+			{
+				sectors_[num_sectors++].create(mesh,i);
 				usage_flag[i] = 1;
-			} else usage_flag[i] = 0;
+			}
+			else
+			{
+				usage_flag[i] = 0;
+			}
 		}
 		
-		for(int i = 0; i < num_portals; i++) portals[i].sectors = new int[num_sectors];
-		for(int i = 0; i < num_sectors; i++) sectors[i].portals = new int[num_portals];
+		for(int i = 0; i < num_portals; i++)
+		{
+			portals_[i].sectors_.resize(num_sectors);
+		}
+
+		for(int i = 0; i < num_sectors; i++)
+		{
+			sectors_[i].portals_.resize(num_portals);
+		}
 		
-		for(int i = 0; i < num_sectors; i++) {
-			Sector *s = &sectors[i];
-			for(int j = 0; j < num_portals; j++) {
-				Portal *p = &portals[j];
-				if(s->inside(p)) {
-					p->sectors[p->num_sectors++] = i;
-					s->portals[s->num_portals++] = j;
+		for(int i = 0; i < num_sectors; i++) 
+		{
+			Sector *s = &sectors_[i];
+			for(int j = 0; j < num_portals; j++) 
+			{
+				Portal *p = &portals_[j];
+				if(s->inside(p)) 
+				{
+					p->sectors_.push_back(i);
+					s->portals_.push_back(j);
+					/*	p->sectors_[p->num_sectors++] = i;
+					s->portals_[s->num_portals++] = j;*/
 				}
 			}
 		}
 		
-		for(int i = 0; i < num_sectors; i++) {
-			Sector *s = &sectors[i];
+		for(int i = 0; i < num_sectors; i++) 
+		{
+			Sector *s = &sectors_[i];
 			Mesh *m = new Mesh();
-			for(int j = 0; j < mesh->getNumSurfaces(); j++) {
+			for(int j = 0; j < mesh->getNumSurfaces(); j++) 
+			{
 				if(usage_flag[j]) continue;
-				if(s->inside(mesh,j)) {
-					m->addSurface(mesh,j);
+				if(s->inside(mesh,j)) 
+				{
+					m->addSurface(mesh, j);
 					usage_flag[j] = 1;
 				}
 			}
@@ -877,43 +859,10 @@ void BSPTree::load(const char *name) {
 		delete mesh;
 	}
 	
-	visible_sectors = new Sector*[num_sectors];
-	old_visible_sectors = new Sector*[num_sectors];
+	visible_sectors_.resize(num_sectors);
+	old_visible_sectors_.resize(num_sectors);
 	
-	Engine::console->printf("sectors %d\nportals %d\n",num_sectors,num_portals);
-}
-
-/*
- */
-void BSPTree::save(const char *name) {
-	FILE *file = fopen(name,"wb");
-	if(!file) {
-		fprintf(stderr,"BSPTree::save(): can`t create \"%s\" file\n",name);
-		return;
-	}
-	int magic = BSP_MAGIC;
-	fwrite(&magic,sizeof(int),1,file);
-	fwrite(&num_portals,sizeof(int),1,file);
-	for(int i = 0; i < num_portals; i++) {
-		Portal *p = &portals[i];
-		fwrite(&p->center,sizeof(Vector3),1,file);
-		fwrite(&p->radius,sizeof(float),1,file);
-		fwrite(&p->num_sectors,sizeof(int),1,file);
-		fwrite(p->sectors,sizeof(int),p->num_sectors,file);
-		fwrite(p->points,sizeof(Vector3),4,file);
-	}
-	fwrite(&num_sectors,sizeof(int),1,file);
-	for(int i = 0; i < num_sectors; i++) {
-		Sector *s = &sectors[i];
-		fwrite(&s->center,sizeof(Vector3),1,file);
-		fwrite(&s->radius,sizeof(float),1,file);
-		fwrite(&s->num_portals,sizeof(int),1,file);
-		fwrite(s->portals,sizeof(int),s->num_portals,file);
-		fwrite(&s->num_planes,sizeof(int),1,file);
-		fwrite(s->planes,sizeof(Vector4),s->num_planes,file);
-		s->root->save(file);
-	}
-	fclose(file);
+	printf("sectors %d\nportals %d\n",num_sectors,num_portals);
 }
 
 /*****************************************************************************/
@@ -924,44 +873,66 @@ void BSPTree::save(const char *name) {
 
 /*
  */
-void BSPTree::bindMaterial(const char *name,Material *material) {
-	for(int i = 0; i < num_sectors; i++) sectors[i].bindMaterial(name,material);
+void BSPTree::bindMaterial(const char *name,Material *material) 
+{
+	for(int i = 0; i < sectors_.size(); i++)
+	{
+		sectors_[i].bindMaterial(name, material);
+	}
 }
 
 /*
  */
-void BSPTree::render() {
-	num_visible_sectors = 0;
-	if(Engine::camera.sector != -1) {
-		sectors[Engine::camera.sector].render();
-	} else {
+void BSPTree::render() 
+{
+	//num_visible_sectors = 0;
+	visible_sectors_.clear();
+
+	if(Core::camera_.in_sector_id_ != -1) 
+	{
+		sectors_[Core::camera_.in_sector_id_].render();
+	} 
+	else 
+	{
 		int sector = -1;
-		float dist = 1000000.0;
-		for(int i = 0; i < num_sectors; i++) {
-			float d = (sectors[i].center - Engine::camera).length();
-			if(d < dist) {
+		float dist = MATH_INF;
+		for(int i = 0; i < sectors_.size(); i++) 
+		{
+			float d = (sectors_[i].bsphere_.getCenter().getVector3() 
+				       - Core::camera_.getPosCoord())
+					   .getLength();
+
+			if(d < dist) 
+			{
 				dist = d;
 				sector = i;
 			}
 		}
-		if(sector != -1) sectors[sector].render();
+		if(sector != -1)
+		{
+			sectors_[sector].render();
+		}
 	}
 }
 
-/*
- */
-void BSPTree::saveState() {
-	old_num_visible_sectors = num_visible_sectors;
-	for(int i = 0; i < num_visible_sectors; i++) {
-		old_visible_sectors[i] = visible_sectors[i];
-		old_visible_sectors[i]->saveState();
+void BSPTree::saveState() 
+{
+	old_visible_sectors_.resize(visible_sectors_.size());
+
+	for(int i = 0; i < visible_sectors_.size(); i++) 
+	{
+		old_visible_sectors_[i] = visible_sectors_[i];
+		old_visible_sectors_[i]->saveState();
 	}
 }
 
-void BSPTree::restoreState(int frame) {
-	num_visible_sectors = old_num_visible_sectors;
-	for(int i = 0; i < num_visible_sectors; i++) {
-		visible_sectors[i] = old_visible_sectors[i];
-		visible_sectors[i]->restoreState(frame);
+void BSPTree::restoreState(int frame) 
+{
+	visible_sectors_.resize(old_visible_sectors_.size());
+
+	for(int i = 0; i < visible_sectors_.size(); i++) 
+	{
+		visible_sectors_[i] = old_visible_sectors_[i];
+		visible_sectors_[i]->restoreState(frame);
 	}
 }

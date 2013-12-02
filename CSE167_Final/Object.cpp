@@ -6,7 +6,8 @@ Object::Object(int type)
 	  shadows_(true), 
 	  rigidbody_(nullptr), 
 	  time_(0), 
-	  frame_(0)
+	  frame_(0), 
+	  pos_(Vector3(0, 0, 0))
 {
 }
 

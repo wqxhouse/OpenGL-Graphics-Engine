@@ -38,7 +38,6 @@ Matrix4 modelview;
 Matrix4 projection;
 
 Light *p_gun_light;				
-OParticles *p_bullet_explosion;
 
 static void initVars();
 static int getTime();
@@ -79,7 +78,8 @@ static void initVars()
 							"res/materials/,"
 							"res/shaders/,"
 							"res/meshes/");
-	Core::LoadScene("world.sce");
+
+	Core::LoadScene("physic.mat");
 	printf("Scene Load Completed...\n");
 	
 }
@@ -99,13 +99,14 @@ static int getTime()
 
 static void display()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glutSwapBuffers();
 }
 
 static void reshape(int x, int y)
 {
-
+	win_x = x; 
+	win_y = y;
+	glViewport(0, 0, win_x, win_y);
 }
 
 static void idle()
@@ -126,7 +127,9 @@ static void idle()
 	{
 		Vector3 pt; 
 		Vector3 n;
-		Object *intersectedObj = Core::GetIntersectObject(view_pos, view_pos.add(direction.scale(1000)), &pt, &n);
+		Object *intersectedObj = 
+			Core::GetIntersectObject(view_pos, view_pos.add(direction.scale(1000)), &pt, &n);
+
 		if(intersectedObj != nullptr)
 		{
 			//TODO: add physics support later
@@ -166,8 +169,10 @@ static void setup()
 
 int main(int argc, char *argv[])
 {
+	initVars();
+	win_x = 640; win_y = 480;
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
 
 	glutInitWindowSize(win_x, win_y);
 	glutCreateWindow("CSE167_Final Project");
@@ -176,7 +181,7 @@ int main(int argc, char *argv[])
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(specialKey);
 	glutReshapeFunc(reshape);
-	glutIdleFunc(idle);
+	//glutIdleFunc(idle);
 
 	glutMouseFunc(mouse);
 	glutMotionFunc(mouseMotion);

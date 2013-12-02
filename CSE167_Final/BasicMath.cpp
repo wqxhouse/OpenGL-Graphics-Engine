@@ -36,3 +36,19 @@ float BasicMath::lengthSquare(const Vector3 &v)
 {
 	return v['x'] * v['x'] + v['y'] * v['y'] + v['z'] * v['z'];
 }
+
+Vector3 BasicMath::getVecMin(const Vector3 &v0, const Vector3 &v1)
+{
+	return Vector3(
+		std::min(v0['x'], v1['x']), 
+		std::min(v0['y'], v1['y']),
+		std::min(v0['z'], v1['z']));
+}
+
+Vector3 BasicMath::getVecMax(const Vector3 &v0, const Vector3 &v1)
+{
+	return Vector3(
+		std::max(v0['x'], v1['x']), 
+		std::max(v0['y'], v1['y']),
+		std::max(v0['z'], v1['z']));
+}

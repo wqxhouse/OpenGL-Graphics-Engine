@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <vector>
 
 #include "core.h"
@@ -29,14 +30,14 @@ public:
 	int bindMaterial(const char *name, Material *material);
 
 	virtual int render(int surface_id = -1) = 0;
-	virtual int intersection(const Vector3 &l0,
+	virtual int getIntersection(const Vector3 &l0,
 		const Vector3 &l1, 
 		Vector3 *point,
 		Vector3 *normal, 
 		int surface_id = -1) = 0;
 
 	virtual int getNumSurfaces() = 0;
-	virtual const char *getSurfaceName(int surface_id) = 0;
+	virtual const std::string getSurfaceName(int surface_id) = 0;
 	virtual int getSurface(const char *name) = 0;
 
 	//bbox

@@ -2,6 +2,7 @@
 #include "object.h"
 
 #include <vector>
+#include <string>
 #include "Mesh.h"
 
 class OGeometry :
@@ -14,7 +15,7 @@ public:
 
 	virtual int render(int surface_id = -1);
 
-	virtual int intersection(
+	virtual int getIntersection(
 		const Vector3 &l0,
 		const Vector3 &l1, 
 		Vector3 *point,
@@ -22,7 +23,7 @@ public:
 		int surface_id = -1) ;
 
 	virtual int getNumSurfaces() ;
-	virtual const char *getSurfaceName(int surface_id) ;
+	virtual const std::string getSurfaceName(int surface_id) ;
 	virtual int getSurface(const char *name) ;
 
 	virtual const Vector3 &getMin(int surface_id = -1) ;

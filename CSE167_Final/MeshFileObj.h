@@ -1,13 +1,12 @@
 #pragma once
-#include "Mesh.h"
 #include <string>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include "Vector3.h"
+#include "Mesh.h"
 
-class MeshFileOBJ : 
-	public Mesh 
+class MeshFileOBJ
 {
 public:
 
@@ -18,12 +17,12 @@ public:
 	int load(const char *name);
 
 	// surfaces
-	virtual int getNumSurfaces();
-	virtual const char *getSurfaceName(int surface);
+	virtual int getNumSurfaces() const;
+	virtual const char *getSurfaceName(int surface) const;
 
 	// vertices
-	virtual int getNumVertex(int surface);
-	virtual Mesh::Vertex *getVertex(int surface);
+	virtual int getNumVertex(int surface) const;
+	virtual Mesh::Vertex *getVertex(int surface) const;
 
 private:
 
@@ -46,7 +45,8 @@ private:
 		int vn;
 	};
 
-	struct Surface {
+	struct Surface 
+	{
 		std::string name;
 		std::vector<Vertex> vertex;
 	};

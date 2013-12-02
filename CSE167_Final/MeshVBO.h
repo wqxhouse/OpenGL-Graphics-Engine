@@ -6,13 +6,15 @@
 #endif
 #include <GL/gl.h>
 #include <GL/glext.h>
+#include "MeshFileObj.h"
 
 class MeshVBO
 	: public Mesh
 {
 public:
 
-	MeshVBO(const Mesh *mesh);
+	explicit MeshVBO(const Mesh *mesh);
+	explicit MeshVBO(const MeshFileOBJ &objmesh);
 	virtual ~MeshVBO(void);
 
 	virtual int render(int pplShading = 0, int surface_id = -1);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "BasicMath.h"
+#define MATH_EPSILON 1e-6f
 class Vector3
 {
 public:
@@ -76,10 +76,16 @@ public:
 // Constructors ///////////
 	Vector3();
 	Vector3(float x, float y, float z);
+	Vector3(const Vector3 &v);
 	~Vector3();
 
 	static Vector3 Normalize(const Vector3& v);
 	static Vector3 Cross(const Vector3& v1, const Vector3 & v2);
+
+	inline const float *getPointer() const
+	{
+		return &m_x;
+	}
 
 private:
 	float m_x, m_y, m_z;
