@@ -11,10 +11,27 @@ class Mesh
 public:
 	struct Triangle 
 	{
-		Vector3 cv[3];			// coordinate vertices
-		int ce[3];			// convex edges
-		Vector4 plane;		// plane
-		Vector4 c[3];
+		Vector3 v[3];			// vertexes
+		int e[3];			// edges
+		char reverse[3];	// edge reverse flag
+		Vector4 plane;			// plane
+		Vector4 c[3];			// fast point in triangle
+
+		~Triangle()
+		{
+			if(v)
+			{
+				delete[] v;
+			}
+			if(e)
+			{
+				delete[] e;
+			}
+			if(c)
+			{
+				delete[] c;
+			}
+		}
 	};
 
 
@@ -32,11 +49,19 @@ public:
 		Vector3 v[2];
 		bool reverse;
 		bool flag;
+
+		~Edge()
+		{
+			if(v)
+			{
+				delete[] v;
+			}
+		}
 	};
 
 	struct Surface 
 	{
-		std::string	name;			// surface name
+		char name[256];			// surface name
 		int num_vertex;	
 		Vertex *vertex;					// TODO:need fix for number of vertex
 		int num_cvertex;
@@ -51,10 +76,34 @@ public:
 
 		BBox bbox;				// bounds
 		BSphere bsphere;
+
+		~Surface()
+		{
+			if(vertex)
+			{
+				delete[] vertex;
+			}
+			if(cvertex)
+			{
+				delete[] cvertex;
+			}
+			if(triangles)
+			{
+				delete[] triangles;
+			}
+			if(edges)
+			{
+				delete[] edges;
+			}
+			if(indices)
+			{
+				delete[] indices;
+			}
+		}
 	};
 
 	Mesh(void);
-	explicit Mesh(const MeshFileOBJ &objmesh);
+	explicit Mesh(const MeshFileOBJ &objmesh, bool isWorld = false);
 	virtual ~Mesh(void);
 
 	virtual int render(int pplShading = 0, int surface_id = -1);
@@ -63,7 +112,7 @@ public:
 
 	// surfaces
 	virtual int getNumSurfaces() const;
-	virtual const std::string getSurfaceName(int surface_id) const;
+	virtual const char* getSurfaceName(int surface_id) const;
 	int getSurfaceId(const char *name) const;
 
 	int getNumStrips(int s) const;
@@ -90,6 +139,7 @@ public:
 
 	void create_mesh_bounds();
 	void create_triangle_strips();
+	void create_triangles();
 	void create_tangent();
 
 	int getIntersection(const Vector3 &l0, const Vector3 &l1, Vector3 *point, Vector3 *normal, int surface_id = -1);

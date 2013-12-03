@@ -37,7 +37,7 @@ public:
 		int surface_id = -1) = 0;
 
 	virtual int getNumSurfaces() = 0;
-	virtual const std::string getSurfaceName(int surface_id) = 0;
+	virtual const char* getSurfaceName(int surface_id) = 0;
 	virtual int getSurface(const char *name) = 0;
 
 	//bbox

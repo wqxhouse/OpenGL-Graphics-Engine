@@ -163,7 +163,7 @@ void BSphere::expand(const Vector3 *vertexCoordArray,int num_vertices)
 
 		for(int i = 0; i < num_vertices; i++) 
 		{
-			float lenSquare = BasicMath::lengthSquare(vertexCoordArray[i] - center_pos);
+			float lenSquare = BasicMath::lengthSquare(vertexCoordArray[i] - new_center_pos);
 			if(radiusSquare < lenSquare)
 			{
 				radiusSquare = lenSquare;

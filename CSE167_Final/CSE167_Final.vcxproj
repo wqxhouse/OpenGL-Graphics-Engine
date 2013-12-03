@@ -11,7 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\CSE167_Homework\CSE167\GLee.c" />
     <ClCompile Include="BasicMath.cpp" />
     <ClCompile Include="Bounds.cpp" />
     <ClCompile Include="BSPTree.cpp" />
@@ -19,6 +18,7 @@
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="core.cpp" />
     <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="GLee.c" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Material.cpp" />
@@ -32,6 +32,7 @@
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Particles.cpp" />
     <ClCompile Include="Position.cpp" />
+    <ClCompile Include="Quat.cpp" />
     <ClCompile Include="RigidBody.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -60,6 +61,7 @@
     <ClInclude Include="Parser.h" />
     <ClInclude Include="Particles.h" />
     <ClInclude Include="Position.h" />
+    <ClInclude Include="Quat.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />

@@ -8,7 +8,7 @@
 #define MATH_HPI 1.570796327f
 #define MATH_EPSILON 1e-6f
 
-#define MATH_DEG2RAD (PI / 180.0f)
+#define MATH_DEG2RAD (MATH_PI / 180.0f)
 #define MATH_RAD2DEG (180.0f / PI)
 
 class Vector3;

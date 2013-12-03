@@ -13,6 +13,7 @@
 #include "OParticles.h"
 #include "Collision.h"
 #include "Light.h"
+#include "Quat.h"
 
 int win_x;
 int win_y;
@@ -102,11 +103,6 @@ static int getTime()
 
 static void display()
 {
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-10, 10, -10, 10, -10, 10);
-
-	glMatrixMode(GL_MODELVIEW);
 	Core::Update(spf);
 	Core::RenderScene(spf);
 	glutSwapBuffers();
@@ -146,11 +142,56 @@ static void idle()
 			//p_bullet_explosion->
 		}
 	}
+
+	//camera
+	Matrix4 m0,m1,m2;
+	//	
+
+	speed = speed - speed.scale(5).scale(spf);
+
+	Quat q0,q1;
+	q0.set(Vector3(0,0,1),-psi);
+	q1.set(Vector3(0,1,0),phi);
+	direction = (q0 * q1).to_matrix().multiplyVec3(Vector3(1,0,0));
+	Vector3 x,y,z;
+	x = direction;
+	y = Vector3::Cross(direction, Vector3(0,0,1));
+	y.normalize();
+	z = Vector3::Cross(y,x);
+	view_pos = view_pos + (x.scale(speed['x']) + y.scale(speed['y']) + z.scale(speed['z'])).scale(spf);
+
+	/*for(int i = 0; i < 4; i++) {
+	collide->collide(NULL,camera + (x * speed.x + y * speed.y + z * speed.z) * ifps / 4.0f,0.25);
+	for(int j = 0; j < collide->num_contacts; j++) {
+	camera += collide->contacts[j].normal * collide->contacts[j].depth / (float)collide->num_contacts;
+	}
+	}*/
+
+	modelview.setLookAtMat(view_pos, view_pos + direction, Vector3(0,0,1));
+	projection.setPerspectiveMat(89, (float)win_x / (float)win_y, 0.1, 500);
 }
 
 static void keyboard(unsigned char key, int x, int y)
 {
+	int vel = 20;
+	switch(key)
+	{
+	case 'w':
+		speed.set(speed['x'] + vel * spf, 'x');
+		break;
 
+	case 's':
+		speed.set(speed['x'] - vel * spf, 'x');
+		break;
+
+	case 'a':
+		speed.set(speed['y'] - vel * spf, 'x');
+		break;
+
+	case 'd':
+		speed.set(speed['y'] + vel * spf, 'x');
+		break;
+	}
 }
 
 static void specialKey(int key, int x, int y)
@@ -163,12 +204,27 @@ static void mouse(int btn, int state, int x, int y)
 	mouseButton = btn;
 	mouseX = x;
 	mouseY = y;
+
+	if(btn == GLUT_LEFT_BUTTON)
+	{
+		if(state == GLUT_DOWN)
+		{
+			mouseX = win_x / 2;
+			mouseY = win_y / 2;
+		}
+	}
+
 }
 
 static void mouseMotion(int x, int y)
 {
 	mouseX = x;
 	mouseY = y;
+	psi += (mouseX - win_x / 2) * 0.2;
+	phi += (mouseY - win_y / 2) * 0.2;
+	if(phi < -89) phi = -89;
+	if(phi > 89) phi = 89;
+
 }
 
 static void setup()

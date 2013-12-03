@@ -177,14 +177,14 @@ void Node::create(Mesh *mesh)
 			}
 			if(left_mesh_num_vertex > 0)
 			{
-				left_mesh->addSurface(mesh->getSurfaceName(i).c_str(), left_mesh_vertex, left_mesh_num_vertex);
+				left_mesh->addSurface(mesh->getSurfaceName(i), left_mesh_vertex, left_mesh_num_vertex);
 			}
 			if(right_mesh_num_vertex > 0)
 			{
-				right_mesh->addSurface(mesh->getSurfaceName(i).c_str(), right_mesh_vertex, right_mesh_num_vertex);
+				right_mesh->addSurface(mesh->getSurfaceName(i), right_mesh_vertex, right_mesh_num_vertex);
 			}
-			delete right_mesh_vertex;
-			delete left_mesh_vertex;
+			delete[] right_mesh_vertex;
+			delete[] left_mesh_vertex;
 		}
 
 		int left_mesh_num_vertex = 0;
@@ -208,6 +208,7 @@ void Node::create(Mesh *mesh)
 		} 
 		else 
 		{
+			mesh->create_triangles();
 			mesh->create_triangle_strips();
 			object_ = new OGeometry(new MeshVBO(mesh));
 			delete right_mesh;
@@ -216,6 +217,7 @@ void Node::create(Mesh *mesh)
 	} 
 	else 
 	{
+		mesh->create_triangles();
 		mesh->create_triangle_strips();
 		object_ = new OGeometry(new MeshVBO(mesh));
 	}
@@ -286,11 +288,15 @@ Portal::Portal()
 	  sectors_(), 
 	  frame_(0) 
 {
-	
+	for(int i = 0; i < 4; i++)
+	{
+		points_[i] = Vector3(0, 0, 0);
+	}
 }
 
 Portal::~Portal() 
 {
+	sectors_.clear();
 }
 
 /*
@@ -756,16 +762,16 @@ void BSPTree::load(const char *name)
 
 	MeshFileOBJ objmesh;
 	objmesh.load(name);
-	Mesh *mesh = new Mesh(objmesh);
-	
+	Mesh *mesh = new Mesh(objmesh, true); // create world mesh
+
 	//potential duplication of code
 	//ref: Mesh ctor, Mesh::addSurface()
-	mesh->create_mesh_bounds();
-	mesh->create_tangent();
+	//mesh->create_mesh_bounds();
+	//mesh->create_tangent(); // do calcluated twice in new Mesh(objmesh) and here, causing portal_ heap corrupted
 
 	for(int i = 0; i < mesh->getNumSurfaces(); i++) 
 	{
-		const char *name = mesh->getSurfaceName(i).c_str();
+		const char *name = mesh->getSurfaceName(i);
 		if(!strncmp(name,"portal",6))
 		{
 			num_portals++;
@@ -775,7 +781,7 @@ void BSPTree::load(const char *name)
 			num_sectors++;
 		}
 	}
-	
+
 	if(num_portals == 0 || num_sectors == 0) 
 	{
 		num_sectors = 1;
@@ -788,15 +794,15 @@ void BSPTree::load(const char *name)
 	{
 		portals_.resize(num_portals);
 		sectors_.resize(num_sectors);
-		
+
 		int *usage_flag = new int[mesh->getNumSurfaces()];
-		
+
 		num_portals = 0;
 		num_sectors = 0;
 
 		for(int i = 0; i < mesh->getNumSurfaces(); i++) 
 		{
-			const char *name = mesh->getSurfaceName(i).c_str();
+			const char *name = mesh->getSurfaceName(i);
 			if(!strncmp(name,"portal",6)) 
 			{
 				portals_[num_portals++].create(mesh,i);
@@ -824,7 +830,7 @@ void BSPTree::load(const char *name)
 		sectors_[i].portals_.resize(num_portals);
 		}*/
 
-		
+
 		for(int i = 0; i < num_sectors; i++) 
 		{
 			Sector *s = &sectors_[i];
@@ -835,13 +841,12 @@ void BSPTree::load(const char *name)
 				{
 					p->sectors_.push_back(i);
 					s->portals_.push_back(j);
-
 					/*	p->sectors_[p->num_sectors++] = i;
 					s->portals_[s->num_portals++] = j;*/
 				}
 			}
 		}
-		
+
 		for(int i = 0; i < num_sectors; i++) 
 		{
 			Sector *s = &sectors_[i];
@@ -859,14 +864,14 @@ void BSPTree::load(const char *name)
 			s->root->create(m);
 			s->create();
 		}
-		
-		delete usage_flag;
+
+		delete[] usage_flag;
 		delete mesh;
 	}
-	
+
 	//visible_sectors_.resize(num_sectors);
 	//old_visible_sectors_.resize(num_sectors);
-	
+
 	printf("sectors %d\nportals %d\n",num_sectors,num_portals);
 }
 

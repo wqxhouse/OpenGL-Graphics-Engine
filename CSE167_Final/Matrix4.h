@@ -58,6 +58,8 @@ public:
 	void ResetTranslate();
 
 	void setFrustumMat(float l, float r, float b, float t, float n, float f);
+	void setLookAtMat(const Vector3 &eye,const Vector3 &dir,const Vector3 &up);
+	void setPerspectiveMat(float fov,float aspect,float znear,float zfar);
 	void setViewportMat(float x0, float y0, float x1, float y1);
 
 	float getDet() const;
@@ -89,6 +91,7 @@ public:
 	~Matrix4();
 
 private:
+	friend class Quat; //ugly consider refactor
 	float m_entries[16];
 
 };

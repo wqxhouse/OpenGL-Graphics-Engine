@@ -23,7 +23,7 @@ public:
 		int surface_id = -1) ;
 
 	virtual int getNumSurfaces() ;
-	virtual const std::string getSurfaceName(int surface_id) ;
+	virtual const char* getSurfaceName(int surface_id) ;
 	virtual int getSurface(const char *name) ;
 
 	virtual const Vector3 getMin(int surface_id = -1) ;

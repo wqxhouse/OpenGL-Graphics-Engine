@@ -1,6 +1,7 @@
 #include "Mesh.h"
 #include <assert.h>
 #include "MeshFileObj.h"
+#include "BSPTree.h"
 
 Mesh::Mesh(void)
 	: bbox_(), 
@@ -54,13 +55,17 @@ Mesh::Mesh(const Mesh *mesh)
 	}
 }
 
-Mesh::Mesh(const MeshFileOBJ &objmesh)
+Mesh::Mesh(const MeshFileOBJ &objmesh, bool isWorld /* = false*/)
 {
 	clearMesh();
 	load_obj_mesh(objmesh);
 
 	create_tangent();
-	create_triangle_strips();
+	if(!isWorld)
+	{
+		create_triangles();
+		create_triangle_strips();
+	}
 	create_mesh_bounds();
 }
 
@@ -73,14 +78,15 @@ void Mesh::load_obj_mesh(const MeshFileOBJ &objmesh)
 		Surface *s = new Surface;
 		init_surface(s);
 		// name
-		s->name = objmesh.getSurfaceName(i);
+		strcpy(s->name, objmesh.getSurfaceName(i));
 		// Vertex
 		int num_vertex			= objmesh.getNumVertex(i);
 		s->vertex				= new Vertex[num_vertex];
 		s->num_vertex			= num_vertex;
 		Vertex *vtxArr_sur_i    = objmesh.getVertex(i);
+		assert(vtxArr_sur_i && "Mesh::load_obj_mesh, vtxArr_sur_i is nullptr");
 		std::copy(vtxArr_sur_i, vtxArr_sur_i + num_vertex, s->vertex);
-		delete []vtxArr_sur_i;
+		delete []vtxArr_sur_i; // free on the fly vertices created in objmesh.getVertex()
 		// cvertex
 		s->num_cvertex = num_vertex;
 		s->cvertex     = new Vector3[s->num_cvertex];
@@ -120,7 +126,147 @@ void Mesh::create_mesh_bounds()
 	}
 }
 
+//Triangle Structure //////////////////////////////////////////////////////////////////////////
+struct csv_Vertex 
+{
+	Vector3 xyz;
+	int id;
+};
 
+struct csv_Edge 
+{
+	int v[2];
+	int id;
+};
+
+static int csv_vertex_cmp(const void *a,const void *b) {
+	csv_Vertex *v0 = (csv_Vertex*)a;
+	csv_Vertex *v1 = (csv_Vertex*)b;
+	float d;
+	d = v0->xyz['x'] - v1->xyz['x'];
+	if(d > MATH_EPSILON) return 1;
+	if(d < -MATH_EPSILON) return -1;
+	d = v0->xyz['y'] - v1->xyz['y'];
+	if(d > MATH_EPSILON) return 1;
+	if(d < -MATH_EPSILON) return -1;
+	d = v0->xyz['z'] - v1->xyz['z'];
+	if(d > MATH_EPSILON) return 1;
+	if(d < -MATH_EPSILON) return -1;
+	return 0;
+}
+
+static int csv_edge_cmp(const void *a,const void *b) {
+	csv_Edge *e0 = (csv_Edge*)a;
+	csv_Edge *e1 = (csv_Edge*)b;
+	int v[2][2];
+	if(e0->v[0] < e0->v[1]) { v[0][0] = e0->v[0]; v[0][1] = e0->v[1]; }
+	else { v[0][0] = e0->v[1]; v[0][1] = e0->v[0]; }
+	if(e1->v[0] < e1->v[1]) { v[1][0] = e1->v[0]; v[1][1] = e1->v[1]; }
+	else { v[1][0] = e1->v[1]; v[1][1] = e1->v[0]; }
+	if(v[0][0] > v[1][0]) return 1;
+	if(v[0][0] < v[1][0]) return -1;
+	if(v[0][1] > v[1][1]) return 1;
+	if(v[0][1] < v[1][1]) return -1;
+	return 0;
+}
+
+void Mesh::create_triangles() 
+{
+	for(int i = 0; i < surfaces_.size(); i++) 
+	{
+		Surface *s = surfaces_[i];
+		s->num_edges = s->num_vertex;
+		s->num_triangles = s->num_vertex / 3;
+
+		// cerate vertex
+		csv_Vertex *v = new csv_Vertex[s->num_vertex];
+		for(int j = 0; j < s->num_vertex; j++) 
+		{
+			v[j].xyz = s->vertex[j].xyz;
+			v[j].id = j;
+		}
+		qsort(v,s->num_vertex,sizeof(csv_Vertex),csv_vertex_cmp);
+		int num_optimized_vertex = 0;
+		int *vbuf = new int[s->num_vertex];
+		for(int j = 0; j < s->num_vertex; j++) 
+		{
+			if(j == 0 || csv_vertex_cmp(&v[num_optimized_vertex - 1],&v[j])) v[num_optimized_vertex++] = v[j];
+			vbuf[v[j].id] = num_optimized_vertex - 1;
+		}
+		// create edges
+		csv_Edge *e = new csv_Edge[s->num_edges];
+		for(int j = 0; j < s->num_edges; j += 3)
+		{
+			e[j + 0].v[0] = vbuf[j + 0];
+			e[j + 0].v[1] = vbuf[j + 1];
+			e[j + 1].v[0] = vbuf[j + 1];
+			e[j + 1].v[1] = vbuf[j + 2];
+			e[j + 2].v[0] = vbuf[j + 2];
+			e[j + 2].v[1] = vbuf[j + 0];
+			e[j + 0].id = j + 0;
+			e[j + 1].id = j + 1;
+			e[j + 2].id = j + 2;
+		}
+		qsort(e,s->num_edges,sizeof(csv_Edge),csv_edge_cmp);
+		int num_optimized_edges = 0;
+		int *ebuf = new int[s->num_edges];
+		int *rbuf = new int[s->num_edges];
+		for(int j = 0; j < s->num_edges; j++) {
+			if(j == 0 || csv_edge_cmp(&e[num_optimized_edges - 1],&e[j])) e[num_optimized_edges++] = e[j];
+			ebuf[e[j].id] = num_optimized_edges - 1;
+			rbuf[e[j].id] = e[num_optimized_edges - 1].v[0] != e[j].v[0];
+		}
+		// final
+		s->num_edges = num_optimized_edges;
+		s->edges = new Edge[s->num_edges];
+		for(int j = 0; j < s->num_edges; j++) {
+			s->edges[j].v[0] = v[e[j].v[0]].xyz;
+			s->edges[j].v[1] = v[e[j].v[1]].xyz;
+			s->edges[j].reverse = 0;
+			s->edges[j].flag = 0;
+		}
+
+		// triangles
+		s->triangles = new Triangle[s->num_triangles];
+		for(int j = 0, k = 0; j < s->num_triangles; j++, k += 3) 
+		{
+			Triangle *t = &s->triangles[j];
+			t->v[0] = v[vbuf[k + 0]].xyz;
+			t->v[1] = v[vbuf[k + 1]].xyz;
+			t->v[2] = v[vbuf[k + 2]].xyz;
+			t->e[0] = ebuf[k + 0];
+			t->e[1] = ebuf[k + 1];
+			t->e[2] = ebuf[k + 2];
+			t->reverse[0] = rbuf[k + 0];
+			t->reverse[1] = rbuf[k + 1];
+			t->reverse[2] = rbuf[k + 2];
+			Vector3 normal;
+			normal = Vector3::Cross(t->v[1] - t->v[0],t->v[2] - t->v[0]);
+			normal.normalize();
+			t->plane = Vector4(normal, t->v[0].negate().dot(normal));
+			normal = Vector3::Cross(t->plane.getVector3(),t->v[0] - t->v[2]);	// fast point in traingle
+			normal.normalize();
+			t->c[0] = Vector4(normal, t->v[0].negate().dot(normal));
+			normal = Vector3::Cross(t->plane.getVector3(), t->v[1] - t->v[0]);
+			normal.normalize();
+			t->c[1] = Vector4(normal, t->v[1].negate().dot(normal));
+			normal = Vector3::Cross(t->plane.getVector3(), t->v[2] - t->v[1]);
+			normal.normalize();
+			t->c[2] = Vector4(normal, t->v[2].negate().dot(normal));
+		}
+
+		delete[] rbuf;
+		delete[] ebuf;
+		delete[] e;
+		delete[] v;
+	}
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// Triangle Strips
+//////////////////////////////////////////////////////////////////////////
 
 struct cts_Vertex {
 	Mesh::Vertex v;
@@ -198,7 +344,7 @@ void Mesh::create_triangle_strips()
 		cts_Vertex *v = new cts_Vertex[s->num_vertex];
 		cts_Edge *e = new cts_Edge[s->num_vertex];
 		cts_Triangle *t = new cts_Triangle[s->num_vertex / 3];
-		// create vertexes
+		// create vertex
 		for(int j = 0; j < s->num_vertex; j++) 
 		{
 			v[j].v = s->vertex[j];
@@ -331,7 +477,7 @@ void Mesh::create_triangle_strips()
 		{
 			indices[j] = s->indices[j];
 		}
-		delete s->indices;
+		delete []s->indices;
 		s->indices = indices;
 	}
 }
@@ -420,7 +566,7 @@ void Mesh::clearMesh()
 
 void Mesh::init_surface(Surface *surface)
 {
-	surface->name.clear();
+	memset(surface->name, 0, 256);
 	surface->vertex = nullptr;
 	surface->num_vertex = 0;
 	surface->cvertex = nullptr;
@@ -448,7 +594,7 @@ void Mesh::addSurface(const char *name, Vertex *vertex, int num_vertex)
 	assert(name != nullptr && "Mesh::addSurface, null name");
 
 	//TODO: check whether std::string can be directly converted with cstring
-	s->name = name;
+	strcpy(s->name, name);
 	
 	//copy vertex
 	s->num_vertex = num_vertex;
@@ -478,7 +624,9 @@ void Mesh::addSurface(Mesh *mesh, int surface_id)
 {
 	Surface *s = new Surface;
 	init_surface(s);
+	memcpy(s, mesh->surfaces_[surface_id], sizeof(Surface));
 
+	//needs to allocate new dyn memory to perform deep copy
 	s->vertex = new Vertex[s->num_vertex];
 	memcpy(s->vertex,mesh->surfaces_[surface_id]->vertex,sizeof(Vertex) * s->num_vertex);
 
@@ -559,7 +707,7 @@ int Mesh::getNumSurfaces() const
 	return surfaces_.size();
 }
 
-const std::string Mesh::getSurfaceName(int surface_id) const
+const char* Mesh::getSurfaceName( int surface_id ) const
 {
 	return surfaces_[surface_id]->name;	
 }
@@ -568,7 +716,7 @@ int Mesh::getSurfaceId(const char *name) const
 {
 	for(int i = 0; i < surfaces_.size(); i++) 
 	{
-		if(!std::string(name).compare(surfaces_[i]->name))
+		if(!strcmp(name, surfaces_[i]->name))
 		{
 			return i;
 		}
@@ -723,26 +871,26 @@ void Mesh::transform_mesh(const Matrix4 &m)
 		for(int j = 0; j < s->num_triangles; j++) 
 		{
 			Triangle *t = &s->triangles[j];
-			t->cv[0] = m.multiplyVec3(t->cv[0]);
-			t->cv[1] = m.multiplyVec3(t->cv[1]);
-			t->cv[2] = m.multiplyVec3(t->cv[2]);
+			t->v[0] = m.multiplyVec3(t->v[0]);
+			t->v[1] = m.multiplyVec3(t->v[1]);
+			t->v[2] = m.multiplyVec3(t->v[2]);
 
 			Vector3 normal;
-			normal = Vector3::Cross(t->cv[1] - t->cv[0], t->cv[2] - t->cv[0]);
+			normal = Vector3::Cross(t->v[1] - t->v[0], t->v[2] - t->v[0]);
 			normal.normalize();
-			t->plane = Vector4(normal['x'], normal['y'], normal['z'], t->cv[0].negate().dot(normal));
+			t->plane = Vector4(normal['x'], normal['y'], normal['z'], t->v[0].negate().dot(normal));
 
-			normal = Vector3::Cross(t->plane.getVector3(), t->cv[0] - t->cv[2]);	
+			normal = Vector3::Cross(t->plane.getVector3(), t->v[0] - t->v[2]);	
 			normal.normalize();
-			t->c[0] = Vector4(normal['x'], normal['y'], normal['z'], t->cv[0].negate().dot(normal));
+			t->c[0] = Vector4(normal['x'], normal['y'], normal['z'], t->v[0].negate().dot(normal));
 
-			normal = Vector3::Cross(t->plane.getVector3(), t->cv[1] - t->cv[0]);
+			normal = Vector3::Cross(t->plane.getVector3(), t->v[1] - t->v[0]);
 			normal.normalize();
-			t->c[1] = Vector4(normal['x'], normal['y'], normal['z'], t->cv[1].negate().dot(normal));
+			t->c[1] = Vector4(normal['x'], normal['y'], normal['z'], t->v[1].negate().dot(normal));
 
-			normal = Vector3::Cross(t->plane.getVector3(), t->cv[2] - t->cv[1]);
+			normal = Vector3::Cross(t->plane.getVector3(), t->v[2] - t->v[1]);
 			normal.normalize();
-			t->c[2] = Vector4(normal['x'], normal['y'], normal['z'], t->cv[2].negate().dot(normal));
+			t->c[2] = Vector4(normal['x'], normal['y'], normal['z'], t->v[2].negate().dot(normal));
 		}
 	}
 	create_mesh_bounds();
@@ -773,26 +921,26 @@ void Mesh::transform_surface(const Matrix4 &m, int surface_id)
 	for(int j = 0; j < s->num_triangles; j++) 
 	{
 		Triangle *t = &s->triangles[j];
-		t->cv[0] = m.multiplyVec3(t->cv[0]);
-		t->cv[1] = m.multiplyVec3(t->cv[1]);
-		t->cv[2] = m.multiplyVec3(t->cv[2]);
+		t->v[0] = m.multiplyVec3(t->v[0]);
+		t->v[1] = m.multiplyVec3(t->v[1]);
+		t->v[2] = m.multiplyVec3(t->v[2]);
 
 		Vector3 normal;
-		normal = Vector3::Cross(t->cv[1] - t->cv[0], t->cv[2] - t->cv[0]);
+		normal = Vector3::Cross(t->v[1] - t->v[0], t->v[2] - t->v[0]);
 		normal.normalize();
-		t->plane = Vector4(normal['x'], normal['y'], normal['z'], t->cv[0].negate().dot(normal));
+		t->plane = Vector4(normal['x'], normal['y'], normal['z'], t->v[0].negate().dot(normal));
 
-		normal = Vector3::Cross(t->plane.getVector3(), t->cv[0] - t->cv[2]);	
+		normal = Vector3::Cross(t->plane.getVector3(), t->v[0] - t->v[2]);	
 		normal.normalize();
-		t->c[0] = Vector4(normal['x'], normal['y'], normal['z'], t->cv[0].negate().dot(normal));
+		t->c[0] = Vector4(normal['x'], normal['y'], normal['z'], t->v[0].negate().dot(normal));
 
-		normal = Vector3::Cross(t->plane.getVector3(), t->cv[1] - t->cv[0]);
+		normal = Vector3::Cross(t->plane.getVector3(), t->v[1] - t->v[0]);
 		normal.normalize();
-		t->c[1] = Vector4(normal['x'], normal['y'], normal['z'], t->cv[1].negate().dot(normal));
+		t->c[1] = Vector4(normal['x'], normal['y'], normal['z'], t->v[1].negate().dot(normal));
 
-		normal = Vector3::Cross(t->plane.getVector3(), t->cv[2] - t->cv[1]);
+		normal = Vector3::Cross(t->plane.getVector3(), t->v[2] - t->v[1]);
 		normal.normalize();
-		t->c[2] = Vector4(normal['x'], normal['y'], normal['z'], t->cv[2].negate().dot(normal));
+		t->c[2] = Vector4(normal['x'], normal['y'], normal['z'], t->v[2].negate().dot(normal));
 	}
 	create_mesh_bounds();
 }

@@ -42,6 +42,7 @@ public:
 
 protected:
 
+	//needs to refactor these constants into codes
 	enum 
 	{
 		PLANE_LEFT = 0, 

@@ -591,7 +591,7 @@ void Core::RenderScene(float spf)
 	
 	// ambient pass
 	// clear depth buffer
-	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 	glDepthFunc(GL_LESS);
 	
 	// number of visible lights

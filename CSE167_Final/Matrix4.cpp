@@ -565,3 +565,33 @@ Matrix4 Matrix4::getRotationPart() const
 		0, 0, 0, 1);
 		
 }
+
+
+void Matrix4::setLookAtMat(const Vector3 &eye,const Vector3 &dir,const Vector3 &up)
+{
+	Vector3 x,y,z;
+	Matrix4 m0,m1;
+	z = eye - dir;
+	z.normalize();
+	x = Vector3::Cross(up,z);
+	x.normalize();
+	y = Vector3::Cross(z,x);
+	y.normalize();
+
+	m0.m_entries[0] = x['x']; m0.m_entries[4] = x['y']; m0.m_entries[8] = x['z']; m0.m_entries[12] = 0.0;
+	m0.m_entries[1] = y['x']; m0.m_entries[5] = y['y']; m0.m_entries[9] = y['z']; m0.m_entries[13] = 0.0;
+	m0.m_entries[2] = z['x']; m0.m_entries[6] = z['y']; m0.m_entries[10] = z['z']; m0.m_entries[14] = 0.0;
+	m0.m_entries[3] = 0.0; m0.m_entries[7] = 0.0; m0.m_entries[11] = 0.0; m0.m_entries[15] = 1.0;
+	m1.setTranslate(eye.negate());
+	*this = m0.multiplyMat(m1);
+}
+
+void Matrix4::setPerspectiveMat(float fov,float aspect,float znear,float zfar)
+{
+	float y = tan(fov * 3.14159265359 / 360.0f);
+	float x = y * aspect;
+	m_entries[0] = 1.0f / x; m_entries[4] = 0.0; m_entries[8] = 0.0; m_entries[12] = 0.0;
+	m_entries[1] = 0.0; m_entries[5] = 1.0f / y; m_entries[9] = 0.0; m_entries[13] = 0.0;
+	m_entries[2] = 0.0; m_entries[6] = 0.0; m_entries[10] = -(zfar + znear) / (zfar - znear); m_entries[14] = -(2.0f * zfar * znear) / (zfar - znear);
+	m_entries[3] = 0.0; m_entries[7] = 0.0; m_entries[11] = -1.0; m_entries[15] = 0.0;
+}

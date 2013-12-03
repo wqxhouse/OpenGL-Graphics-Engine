@@ -84,7 +84,7 @@ int OGeometry::getNumSurfaces()
 	return mesh_->getNumSurfaces();
 }
 
-const std::string OGeometry::getSurfaceName(int surface_id) 
+const char* OGeometry::getSurfaceName( int surface_id )
 {
 	return mesh_->getSurfaceName(surface_id);
 }
