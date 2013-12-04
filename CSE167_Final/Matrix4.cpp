@@ -526,23 +526,23 @@ Matrix4 Matrix4::getInverse() const
 	}
 
 	float idet = 1.0f / det;
-	Matrix4 ret(  
-	 (m_entries[5] * m_entries[10] - m_entries[9] * m_entries[6]) * idet,
-	-(m_entries[1] * m_entries[10] - m_entries[9] * m_entries[2]) * idet,
-	 (m_entries[1] * m_entries[6] - m_entries[5] * m_entries[2]) * idet,
-	 0.0,
-	 -(m_entries[4] * m_entries[10] - m_entries[8] * m_entries[6]) * idet,
-	  (m_entries[0] * m_entries[10] - m_entries[8] * m_entries[2]) * idet,
-	 -(m_entries[0] * m_entries[6] - m_entries[4] * m_entries[2]) * idet,
-	 0.0,
-	  (m_entries[4] * m_entries[9] - m_entries[8] * m_entries[5]) * idet,
-	 -(m_entries[0] * m_entries[9] - m_entries[8] * m_entries[1]) * idet,
-	  (m_entries[0] * m_entries[5] - m_entries[4] * m_entries[1]) * idet,
-	 0.0,
-	 -(m_entries[12] * m_entries[0] + m_entries[13] * m_entries[4] + m_entries[14] * m_entries[8]),
-	 -(m_entries[12] * m_entries[1] + m_entries[13] * m_entries[5] + m_entries[14] * m_entries[9]),
-	 -(m_entries[12] * m_entries[2] + m_entries[13] * m_entries[6] + m_entries[14] * m_entries[10]),
-	 1.0);
+	Matrix4 ret;
+	ret.m_entries[0] =  (m_entries[5] * m_entries[10] - m_entries[9] * m_entries[6]) * idet;
+	ret.m_entries[1] = -(m_entries[1] * m_entries[10] - m_entries[9] * m_entries[2]) * idet;
+	ret.m_entries[2] =  (m_entries[1] * m_entries[6] - m_entries[5] * m_entries[2]) * idet;
+	ret.m_entries[3] = 0.0;
+	ret.m_entries[4] = -(m_entries[4] * m_entries[10] - m_entries[8] * m_entries[6]) * idet;
+	ret.m_entries[5] =  (m_entries[0] * m_entries[10] - m_entries[8] * m_entries[2]) * idet;
+	ret.m_entries[6] = -(m_entries[0] * m_entries[6] - m_entries[4] * m_entries[2]) * idet;
+	ret.m_entries[7] = 0.0;
+	ret.m_entries[8] =  (m_entries[4] * m_entries[9] - m_entries[8] * m_entries[5]) * idet;
+	ret.m_entries[9] = -(m_entries[0] * m_entries[9] - m_entries[8] * m_entries[1]) * idet;
+	ret.m_entries[10] =  (m_entries[0] * m_entries[5] - m_entries[4] * m_entries[1]) * idet;
+	ret.m_entries[11] = 0.0;
+	ret.m_entries[12] = -(m_entries[12] * ret.m_entries[0] + m_entries[13] * ret.m_entries[4] + m_entries[14] * ret.m_entries[8]);
+	ret.m_entries[13] = -(m_entries[12] * ret.m_entries[1] + m_entries[13] * ret.m_entries[5] + m_entries[14] * ret.m_entries[9]);
+	ret.m_entries[14] = -(m_entries[12] * ret.m_entries[2] + m_entries[13] * ret.m_entries[6] + m_entries[14] * ret.m_entries[10]);
+	ret.m_entries[15] = 1.0;
 
 	return ret;
 }

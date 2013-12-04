@@ -27,8 +27,8 @@ void BBox::clear()
 
 void BBox::set(const Vector3 &min,const Vector3 &max)
 {
-	min_ = min_;
-	max_ = max_;
+	min_ = min;
+	max_ = max;
 }
 
 void BBox::setTransform(const Matrix4 &transform) 

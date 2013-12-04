@@ -29,6 +29,11 @@ Mesh::Mesh(const Mesh *mesh)
 		Surface *s = new Surface;
 		init_surface(s);
 
+		memcpy(s, mesh->surfaces_[i], sizeof(Surface));
+
+		// name
+		strcpy(s->name, mesh->getSurfaceName(i));
+
 		s->vertex = new Vertex[s->num_vertex];
 		memcpy(s->vertex,mesh->surfaces_[i]->vertex,sizeof(Vertex) * s->num_vertex);
 
@@ -77,6 +82,7 @@ void Mesh::load_obj_mesh(const MeshFileOBJ &objmesh)
 	{
 		Surface *s = new Surface;
 		init_surface(s);
+
 		// name
 		strcpy(s->name, objmesh.getSurfaceName(i));
 		// Vertex

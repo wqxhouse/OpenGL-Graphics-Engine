@@ -48,6 +48,9 @@ Matrix4 Core::imodelview_;
 Matrix4 Core::transform_;
 Matrix4 Core::itransform_;
 
+Texture *Core::texture_;
+Material *Core::material_;
+
 //second per frame
 float Core::spf_;
 
@@ -77,10 +80,11 @@ int Core::init(int win_width, int win_height)
 
 	curr_light_  = nullptr;
 
-	viewport_.resize(4);
 	render_wires_ = false;
 	render_shadow_= true;
 	scissor_test_ = true;
+
+	viewport_.resize(4);
 
 	//assume my laptop's x4500 is ok with occ query
 	support_occlusion_ = true;
@@ -135,6 +139,15 @@ void Core::cleanUp()
 		delete meshes_it->second;
 	}
 	meshes_.clear();
+	
+	if(texture_)
+	{
+		delete texture_;
+	}
+	if(material_)
+	{
+		delete material_;
+	}
 }
 
 
@@ -252,6 +265,9 @@ void Core::LoadScene(const char *name)
 	WorldFile::load(FindFile(name));
 	/*if(ex) extern_load(extern_load_data);
 	console->printf("load \"%s\" ok\n",name);*/
+
+	texture_  = new Texture(win_width_, win_height_, Texture::TEXTURE_2D,Texture::RGB | Texture::CLAMP | Texture::LINEAR);
+	material_ = LoadMaterial("screen.mat");
 }
 
 /*
@@ -491,11 +507,12 @@ void Core::render_light()
 		int scissor[4];
 		l->getScissor(scissor);
 		if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
+		glDisable(GL_STENCIL_TEST);
 		
 		glDepthFunc(GL_EQUAL);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE,GL_ONE);
-		
+
 		// all visible opacitie objects
 		for(int i = 0; i < BSPTree::visible_sectors_.size(); i++) 
 		{
@@ -557,6 +574,7 @@ void Core::render_light()
  */
 void Core::RenderScene(float spf) 
 {
+	printf("%.5f\r", spf);
 	// get matrixes
 	float projPOD[16];
 	float modelvPOD[16];
@@ -564,6 +582,7 @@ void Core::RenderScene(float spf)
 	glGetFloatv(GL_MODELVIEW_MATRIX,modelvPOD);
 	projection_ = Matrix4(projPOD);
 	modelview_  = Matrix4(modelvPOD);
+//	modelview_.print();
 
 	imodelview_ = modelview_.getInverse();
 	
@@ -580,18 +599,20 @@ void Core::RenderScene(float spf)
 	num_triangles_ = 0;
 	
 	// get viewport
-	viewport_.resize(4);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	glGetIntegerv(GL_VIEWPORT, &viewport_[0]);
-	
-	// set matrixes
+
+	//// set matrix
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(projection_.getPointer());
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(modelview_.getPointer());
-	
+
 	// ambient pass
 	// clear depth buffer
-	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT);
 	glDepthFunc(GL_LESS);
 	
 	// number of visible lights
@@ -636,26 +657,30 @@ void Core::RenderScene(float spf)
 		glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	}
 	
-	//glFlush();
+	glFlush();
 	
+	texture_->bind();
+	texture_->copy();
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	// get viewport
 	glGetIntegerv(GL_VIEWPORT, &viewport_[0]);
 	
-	//// postprocessing
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	//glOrtho(-1,1,-1,1,-1,1);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-	//
-	//glDisable(GL_DEPTH_TEST);
-	//glDepthMask(GL_FALSE);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-1,1,-1,1,-1,1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
-	//screen_material->enable();
-	//screen_material->bind();
-	//screen_material->bindTexture(0,screen_texture);
-	//screen_texture->render();
-	//screen_material->disable();
+
+	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+
+	material_->enable();
+	material_->bind();
+	material_->bindTexture(0, texture_);
+	texture_->render();
+	material_->disable();
 }
 
 /*****************************************************************************/

@@ -109,6 +109,8 @@ public:
 	static std::vector<char*> filepaths_;
 
 	static int texture_filter_;
+	static Texture *texture_;
+	static Material *material_;
 
 	static std::map<std::string, Shader*>   shaders_;
 	static std::map<std::string, Texture*>  textures_;

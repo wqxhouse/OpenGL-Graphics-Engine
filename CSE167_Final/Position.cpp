@@ -2,13 +2,22 @@
 #include "BSPTree.h"
 #include "Object.h"
 
+Position::Position()
+   : spline_(nullptr), 
+   in_sector_id_(-1),
+   bsphere_(), 
+   sectors_()
+{
+
+}
+
 Position::Position(const Vector3 &pos) 
 	: spline_(nullptr), 
 	  expression_(nullptr), 
 	  in_sector_id_(-1), 
 	  bsphere_(pos, 0.0)
 {
-	sectors_.resize(NUM_SECTORS);
+	//sectors_.resize(NUM_SECTORS);
 }
 
 Position::~Position() 
@@ -78,10 +87,6 @@ void Position::setRadius(float radius)
 	bsphere_.setRadius(radius);
 }
 
-void Position::setPosition(const Vector3 &v)
-{
-	bsphere_.setCenter(v);
-}
 
 /*
  */
@@ -135,7 +140,7 @@ Matrix4 Position::to_matrix(float time)
 	return transform;
 }
 
-Position &Position::operator=(const Position &pos) 
+void Position::copyPosition(const Position &pos)
 {
 	bsphere_.set(pos.getPosCoord(), pos.getBoundingRadius());
 	spline_ = pos.spline_ ? new Spline(*pos.spline_) : nullptr;
@@ -147,16 +152,16 @@ Position &Position::operator=(const Position &pos)
 	{
 		sectors_[i] = pos.sectors_[i];
 	}
-	return *this;
 }
 
-Position &Position::operator=(const Vector3 &pos) 
+void Position::setPosition(const Vector3 &v)
 {
 	if(BSPTree::sectors_.size() == 0)
 	{
-		return *this;
+		return;
 	}
-	bsphere_.setCenter(pos);
+
+	bsphere_.setCenter(v);
 
 	sectors_.resize(0);
 
@@ -167,7 +172,7 @@ Position &Position::operator=(const Vector3 &pos)
 			{
 				in_sector_id_ = i;
 				find(in_sector_id_, getBoundingRadius());
-				return *this;
+				return;
 			}
 		}
 	} 
@@ -189,7 +194,7 @@ Position &Position::operator=(const Vector3 &pos)
 					{
 						in_sector_id_ = p->sectors_[j];
 						find(in_sector_id_, getBoundingRadius());
-						return *this;
+						return;
 					}
 				}
 			}
@@ -199,7 +204,7 @@ Position &Position::operator=(const Vector3 &pos)
 				{
 					in_sector_id_ = i;
 					find(in_sector_id_, getBoundingRadius());
-					return *this;
+					return;
 				}
 			}
 			in_sector_id_ = -1;
@@ -209,6 +214,23 @@ Position &Position::operator=(const Vector3 &pos)
 	{
 		find(in_sector_id_, getBoundingRadius());
 	}
+
+}
+
+
+Position &Position::operator=(const Position &pos) 
+{
+	copyPosition(pos);
+	return *this;
+}
+
+Position &Position::operator=(const Vector3 &pos) 
+{
+	if(BSPTree::sectors_.size() == 0)
+	{
+		return *this;
+	}
+	setPosition(pos);
 	return *this;
 }
 

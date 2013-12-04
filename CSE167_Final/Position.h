@@ -11,7 +11,7 @@ class Expression;
 class Position
 {
 public:
-	
+	Position();
 	Position(const Vector3 &posCoord);
 	~Position();
 	
@@ -22,6 +22,7 @@ public:
 	
 	void setRadius(float radius);
 	void setPosition(const Vector3 &v);
+	void copyPosition(const Position &pos);
 	
 	void update(float time,Matrix4 &transform);
 	void update(float time,Object *object = nullptr);

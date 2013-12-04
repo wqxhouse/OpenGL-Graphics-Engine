@@ -17,7 +17,8 @@ extern "C" {
 
 /*
  */
-Texture::Texture(int width,int height,GLuint target,int flag) : width(width), height(height), depth(1), target(target), flag(flag) {
+Texture::Texture(int width,int height,GLuint target,int flag) : width(width), height(height), depth(1), target(target), flag(flag) 
+{
 	glGenTextures(1,&id);
 	glBindTexture(target,id);
 	if(flag & LUMINANCE) format = GL_LUMINANCE;

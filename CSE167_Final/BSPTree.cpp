@@ -46,6 +46,9 @@ Node::~Node()
  */
 void Node::create(Mesh *mesh) 
 {
+	static int counter = 0;
+	counter++;
+
 	bbox_.set(mesh->getMin(), mesh->getMax());
 	bsphere_.set(mesh->getCenter(), mesh->getRadius());
 
@@ -57,6 +60,7 @@ void Node::create(Mesh *mesh)
 
 	if(num_vertex / 3 > TRIANGLES_PER_NODE) 
 	{
+		printf("split: \n");
 		Vector4 plane;
 		Vector3 size = bbox_.getMax() - bbox_.getMin();
 		if(size['x'] > size['y']) 
@@ -217,6 +221,11 @@ void Node::create(Mesh *mesh)
 	} 
 	else 
 	{
+		printf("< threshold 1024, count = %d, draw: \n", mesh->getNumSurfaces());
+		for(int i = 0; i < mesh->getNumSurfaces(); i++)
+		{
+			printf(" %s\n", mesh->getSurfaceName(i));
+		}
 		mesh->create_triangles();
 		mesh->create_triangle_strips();
 		object_ = new OGeometry(new MeshVBO(mesh));
@@ -490,8 +499,8 @@ void Sector::create(Mesh *mesh, int surface_id)
 		Vector3 normal;
 		normal = Vector3::Cross(v[i * 3 + 1].xyz - v[i * 3 + 0].xyz,v[i * 3 + 2].xyz - v[i * 3 + 0].xyz);
 		normal.normalize();
-		
-		planes_[i] = Vector4(normal['x'], normal['y'], normal['z'], normal.negate().dot(v[i * 3 + 0].xyz));
+
+		planes_[i] = Vector4(normal['x'], normal['y'], normal['z'], -normal.dot(v[i * 3 + 0].xyz));
 	}
 }
 
@@ -649,7 +658,8 @@ void Sector::render(Portal *portal)
 
 		p->frame_ = Core::curr_frame_;
 
-		if(Core::frustum_->inside(p->bsphere_.getCenter().getVector3(), p->bsphere_.getRadius())) {
+		if(Core::frustum_->inside(p->bsphere_.getCenter().getVector3(), p->bsphere_.getRadius())) 
+		{
 			float dist = (Core::camera_.getPosCoord() - p->bsphere_.getCenter().getVector3()).getLength();
 			
 			if(Core::support_occlusion_ && dist > p->bsphere_.getRadius()) 
@@ -684,7 +694,7 @@ void Sector::render(Portal *portal)
 
 			for(int j = 0; j < p->sectors_.size(); j++) 
 			{
-				BSPTree::sectors_[p->sectors_[j]].render(dist > p->bsphere_.getRadius() ? p : NULL);
+				BSPTree::sectors_[p->sectors_[j]].render(dist > p->bsphere_.getRadius() ? p : nullptr);
 			}
 
 			if(dist > p->bsphere_.getRadius())

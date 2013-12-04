@@ -122,7 +122,7 @@ int Frustum::inside_portal(const PortalFrustum &p,const Vector3 &min,const Vecto
 
 int Frustum::inside_plane(const Vector4 &plane, const Vector3 &min, const Vector3 &max) const
 {
-	float min_x = min['x'] * plane['x'];
+	/*float min_x = min['x'] * plane['x'];
 	float max_x = min['x'] * plane['x'];
 	float min_y = min['y'] * plane['y'];
 	float max_y = max['y'] * plane['y'];
@@ -140,6 +140,16 @@ int Frustum::inside_plane(const Vector4 &plane, const Vector3 &min, const Vector
 	if(max_min_xy + max_zw > 0.0f) return 1;
 	if(min_max_xy + max_zw > 0.0f) return 1;
 	if(max_max_xy + max_zw > 0.0f) return 1;
+	return 0;*/
+
+	if(plane * Vector4(min['x'],min['y'],min['z'],1) > 0)  return 1;
+	if(plane * Vector4(min['x'],min['y'],max['z'],1) > 0)  return 1;
+	if(plane * Vector4(min['x'],max['y'],min['z'],1) > 0)  return 1;
+	if(plane * Vector4(min['x'],max['y'],max['z'],1) > 0)  return 1;
+	if(plane * Vector4(max['x'],min['y'],min['z'],1) > 0)  return 1;
+	if(plane * Vector4(max['x'],min['y'],max['z'],1) > 0)  return 1;
+	if(plane * Vector4(max['x'],max['y'],min['z'],1) > 0)  return 1;
+	if(plane * Vector4(max['x'],max['y'],max['z'],1) > 0)  return 1;
 	return 0;
 }
 

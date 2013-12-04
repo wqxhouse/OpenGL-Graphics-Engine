@@ -78,6 +78,8 @@ int MeshFileOBJ::load(const char *name)
 			}
 			if(num_vertex == 3)
 			{
+				//TODO: NEED TO SERIOUSLY RECONSIDER THE ORDERING OF FACE
+				//huge coupling with subsequent vertex reading such as in portal.create() to create clip plane
 				surface->vertex.push_back(v[0]);
 				surface->vertex.push_back(v[1]);
 				surface->vertex.push_back(v[2]);

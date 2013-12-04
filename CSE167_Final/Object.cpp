@@ -59,7 +59,18 @@ void Object::updatePos(const Vector3 &p)
 int Object::bindMaterial(const char *name, Material *material)
 {
 	//TODO: after integrating the xml system
-	return 0;
+	//TODO: support blending / transparent later on
+	int bind = 0;
+	for(int i = 0; i < getNumSurfaces(); i++) 
+	{
+		if(Core::match(name,getSurfaceName(i))) 
+		{
+			int j;
+			materials_[i] = material;
+			bind = 1;
+		}
+	}
+	return bind;
 }
 
 void Object::setRigidBody(RigidBody *rigidbody)
@@ -115,10 +126,10 @@ void Object::enable()
 	//TODO: bind shader
 
 	// new transformation
-	/*if(Shader::old_shader)
+	if(Shader::old_shader)
 	{
-	Shader::old_shader->bind();
-	}*/
+		Shader::old_shader->bind();
+	}
 }
 
 void Object::disable()
@@ -137,10 +148,10 @@ void Object::disable()
 
 	glLoadMatrixf(matPOD);
 	//TODO:
-	//if(Shader::old_shader)
-	//{
-	//	Shader::old_shader->bind();
-	//}
+	if(Shader::old_shader)
+	{
+		Shader::old_shader->bind();
+	}
 }
 
 void Object::setShadows(bool b_shadows)

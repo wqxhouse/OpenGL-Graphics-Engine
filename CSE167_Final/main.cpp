@@ -60,8 +60,8 @@ static void initVars()
 	end_t = 0;
 	counter = 0;
 	fpsLock = 60;
-	phi = 35;
-	psi = 10;
+	phi = 10;
+	psi = 35;
 	view_pos = Vector3(-0.79,2.58,0.67);
 	speed    = Vector3(0, 0, 0);
 	time = 0;
@@ -70,12 +70,12 @@ static void initVars()
 	mouseX = 0;
 	mouseY = 0;
 	mouseButton = 0;
+}
 
-	p_collision = new Collision();
-	int isInit = Core::init(win_x, win_y);
-	assert(isInit && "Core::init failed()");
-
+static void initCore()
+{
 	Core::AddDirectoryPath(
+		"data/,"
 		"data/engine/,"
 		"data/textures/,"
 		"data/textures/cube/,"
@@ -84,8 +84,13 @@ static void initVars()
 		"data/meshes/,"
 		"data/testing/");
 
+	p_collision = new Collision();
+	int isInit = Core::init(win_x, win_y);
+	assert(isInit && "Core::init failed()");
+
 	Core::LoadScene("testing.map");
 	printf("Scene Load Completed...\n");
+
 }
 
 static int getTime() 
@@ -103,6 +108,11 @@ static int getTime()
 
 static void display()
 {
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf(projection.getPointer());
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(modelview.getPointer());
+
 	Core::Update(spf);
 	Core::RenderScene(spf);
 	glutSwapBuffers();
@@ -169,6 +179,8 @@ static void idle()
 
 	modelview.setLookAtMat(view_pos, view_pos + direction, Vector3(0,0,1));
 	projection.setPerspectiveMat(89, (float)win_x / (float)win_y, 0.1, 500);
+
+	glutPostRedisplay();
 }
 
 static void keyboard(unsigned char key, int x, int y)
@@ -191,7 +203,12 @@ static void keyboard(unsigned char key, int x, int y)
 	case 'd':
 		speed.set(speed['y'] + vel * spf, 'x');
 		break;
+	case 'u':
+		phi++;
+		psi--;
+		break;
 	}
+
 }
 
 static void specialKey(int key, int x, int y)
@@ -205,14 +222,14 @@ static void mouse(int btn, int state, int x, int y)
 	mouseX = x;
 	mouseY = y;
 
-	if(btn == GLUT_LEFT_BUTTON)
+	/*if(btn == GLUT_LEFT_BUTTON)
 	{
 		if(state == GLUT_DOWN)
 		{
 			mouseX = win_x / 2;
 			mouseY = win_y / 2;
 		}
-	}
+	}*/
 
 }
 
@@ -220,28 +237,31 @@ static void mouseMotion(int x, int y)
 {
 	mouseX = x;
 	mouseY = y;
-	psi += (mouseX - win_x / 2) * 0.2;
+	/*psi += (mouseX - win_x / 2) * 0.2;
 	phi += (mouseY - win_y / 2) * 0.2;
 	if(phi < -89) phi = -89;
 	if(phi > 89) phi = 89;
-
+*/
 }
 
 static void setup()
 {
 	glClearColor(0, 0, 0, 1);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 }
 
 
 int main(int argc, char *argv[])
 {
 	initVars();
-	win_x = 640; win_y = 480;
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
-
 	glutInitWindowSize(win_x, win_y);
 	glutCreateWindow("CSE167_Final Project");
+
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
+
+	initCore();
 
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
