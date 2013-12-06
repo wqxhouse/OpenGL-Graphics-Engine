@@ -66,6 +66,7 @@ Packages/
 !GLUTLibrary/*
 !3DObjs/*
 !Skybox/*
+!CSE167_Final/data/*
 
 #Allow NuGet.exe
 !NuGet.exe

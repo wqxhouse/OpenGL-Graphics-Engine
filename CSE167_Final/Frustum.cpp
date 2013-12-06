@@ -25,26 +25,39 @@ void Frustum::set(const Matrix4 &m)
 {
 	float matPOD[16];
 	m.getMatrixArray(matPOD);
-	extractPlanes(&planes_, matPOD, 1);
+	//extractPlanes(&planes_, matPOD, 1);   //TODO: bug code <- extractPlane
+
+#define PLANE(n,c0,c1,c2,c3) { \
+	planes_[n] = Vector4(c0,c1,c2,c3); \
+	planes_[n] = planes_[n].scale(1.0f / Vector3(planes_[n]['x'], planes_[n]['y'], planes_[n]['z']).getLength()); \
+	}
+	PLANE(0,matPOD[3]-matPOD[0],matPOD[7]-matPOD[4],matPOD[11]-matPOD[8],matPOD[15]-matPOD[12])
+		PLANE(1,matPOD[3]+matPOD[0],matPOD[7]+matPOD[4],matPOD[11]+matPOD[8],matPOD[15]+matPOD[12])
+		PLANE(2,matPOD[3]-matPOD[1],matPOD[7]-matPOD[5],matPOD[11]-matPOD[9],matPOD[15]-matPOD[13])
+		PLANE(3,matPOD[3]+matPOD[1],matPOD[7]+matPOD[5],matPOD[11]+matPOD[9],matPOD[15]+matPOD[13])
+		PLANE(4,matPOD[3]-matPOD[2],matPOD[7]-matPOD[6],matPOD[11]-matPOD[10],matPOD[15]-matPOD[14])
+		PLANE(5,matPOD[3]+matPOD[2],matPOD[7]+matPOD[6],matPOD[11]+matPOD[10],matPOD[15]+matPOD[14])
+#undef PLANE
+
 }
 
 int Frustum::addPortal(const Vector3 *points)
 {
-	if(inside(points, 4) == 0)
-	{
-		printf("culled from frustum");
-		return 0;
-	}
+	//TODO: investigate, why adding this the following with result screen blinking
+	//if(inside(points, 4) == 0)
+	//{
+	//	//printf("culled from frustum");
+	//	return 0;
+	//}
 
 	Vector3 cam_pos = Core::camera_.getPosCoord();
 
 	// portal plane
-	Vector3 normal = (points[1] - points[0], points[2] - points[0]);
+	Vector3 normal = Vector3::Cross(points[1] - points[0], points[2] - points[0]);
 	normal.normalize();
 
 	// add portal
 	PortalFrustum portal_f;
-	portals_.push_back(portal_f);
 
 	float angle = (cam_pos - points[0]).dot(normal);
 	if(angle > 0.0f)
@@ -66,6 +79,31 @@ int Frustum::addPortal(const Vector3 *points)
 			j = 0;
 		}
 	}
+	portals_.push_back(portal_f);
+
+	/*static int count = 0;
+	for(int i = 0; i < portals_.size(); i++)
+	{
+	for(int j = 0; j < 4; j++)
+	{
+	count++;
+	printf("plane %d: %.2f, %.2f, %.2f, %.2f\n", 
+	count, 
+	portals_[i].clip_planes[j]['x'], 
+	portals_[i].clip_planes[j]['y'], 
+	portals_[i].clip_planes[j]['z'], 
+	portals_[i].clip_planes[j]['w']);
+	}
+	count++;
+	printf("plane %d: %.2f, %.2f, %.2f, %.2f\n",
+	count, 
+	portals_[i].plane['x'], 
+	portals_[i].plane['y'], 
+	portals_[i].plane['z'], 
+	portals_[i].plane['w']);
+	}
+	printf("\n");
+	count = 0;*/
 
 	return 1;
 }
@@ -168,12 +206,19 @@ int Frustum::inside_frustum_planes(const Vector3 *points, int num_points) const
 
 int Frustum::inside_frustum_planes(const Vector3 &point, float radius) const
 {
-	if(planes_[0].dotVec3(point) < -radius) return 0;
+	/*if(planes_[0].dotVec3(point) < -radius) return 0;
 	if(planes_[1].dotVec3(point) < -radius) return 0;
 	if(planes_[2].dotVec3(point) < -radius) return 0;
 	if(planes_[3].dotVec3(point) < -radius) return 0;
 	if(planes_[4].dotVec3(point) < -radius) return 0;
-	if(planes_[5].dotVec3(point) < -radius) return 0;
+	if(planes_[5].dotVec3(point) < -radius) return 0;*/
+
+	if(planes_[0].dot(Vector4(point, 1)) < -radius) return 0;
+	if(planes_[1].dot(Vector4(point, 1)) < -radius) return 0;
+	if(planes_[2].dot(Vector4(point, 1)) < -radius) return 0;
+	if(planes_[3].dot(Vector4(point, 1)) < -radius) return 0;
+	if(planes_[4].dot(Vector4(point, 1)) < -radius) return 0;
+	if(planes_[5].dot(Vector4(point, 1)) < -radius) return 0;
 
 	return 1;
 }

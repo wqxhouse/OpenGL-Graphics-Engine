@@ -1,5 +1,6 @@
 #include "OGeometry.h"
 #include "MeshFileObj.h"
+#include <assert.h>
 
 OGeometry::OGeometry(Mesh *mesh) 
 	: Object(OBJ_GEOMETRY), 
@@ -79,6 +80,13 @@ int OGeometry::render(int surface_id)
 		frame_ = Core::curr_frame_;
 	}
 
+	//printf("frames: ");
+	//for(int i = 0; i < frames_.size(); i++)
+	//{
+	//	printf("%d, ", frames_[i]);
+	//}
+	//printf(" \n");
+
 	//render
 	for(int i = 0; i < getNumSurfaces(); i++) 
 	{
@@ -92,6 +100,7 @@ int OGeometry::render(int surface_id)
 		}
 		materials_[i]->bind();
 		num_triangles += mesh_->render(true ,i);
+	
 	}
 	
 	

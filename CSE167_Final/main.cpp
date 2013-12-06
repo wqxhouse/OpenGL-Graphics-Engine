@@ -17,9 +17,10 @@
 
 int win_x;
 int win_y;
-int mouseX;
-int mouseY;
-int mouseButton;
+
+bool isMouseHidden;
+std::vector<bool> keyStates;
+bool isFullScreen;
 
 float fps;
 float spf;
@@ -54,8 +55,8 @@ static void setup();
 
 static void initVars()
 {
-	win_x = 1280;
-	win_y = 720;
+	win_x = 1024;
+	win_y = 768;
 	start_t = 0;
 	end_t = 0;
 	counter = 0;
@@ -67,21 +68,18 @@ static void initVars()
 	time = 0;
 	fps = 60;
 
-	mouseX = 0;
-	mouseY = 0;
-	mouseButton = 0;
+	keyStates.resize(256);
+	isMouseHidden = true;
+
+	isFullScreen = false;
 }
 
 static void initCore()
 {
+	//hide cursor
+	glutSetCursor(GLUT_CURSOR_NONE); 
+
 	Core::AddDirectoryPath(
-		"data/,"
-		"data/engine/,"
-		"data/textures/,"
-		"data/textures/cube/,"
-		"data/materials/,"
-		"data/shaders/,"
-		"data/meshes/,"
 		"data/testing/");
 
 	p_collision = new Collision();
@@ -136,27 +134,52 @@ static void idle()
 	}
 	spf = 1.0f / fps;
 	time += spf;
-	//////////////////////////////////////////////////////////////////////////
-	// Handle gun fire ///////////////////////////////////////////////////////
-	static bool fire = false;
-	if(!fire && mouseButton & GLUT_LEFT_BUTTON)
-	{
-		Vector3 pt; 
-		Vector3 n;
-		Object *intersectedObj = 
-			Core::GetIntersectObject(view_pos, view_pos.add(direction.scale(1000)), &pt, &n);
 
-		if(intersectedObj != nullptr)
+	//handle keypresses/////////
+	float vel = 20;
+	if(keyStates[(int)'w']) speed.set(speed['x'] + vel * spf, 'x');
+	if(keyStates[(int)'s']) speed.set(speed['x'] - vel * spf, 'x');
+	if(keyStates[(int)'a']) speed.set(speed['y'] - vel * spf, 'y');
+	if(keyStates[(int)'d']) speed.set(speed['y'] + vel * spf, 'y');
+	if(keyStates[(int)'k']) psi++;
+	if(keyStates[(int)'h']) psi--;
+	if(keyStates[(int)'u'])
+	{
+		phi+=0.5;
+		if(phi <= -89.0f)
 		{
-			//TODO: add physics support later
-			//p_bullet_explosion->
+			phi = -89;
 		}
 	}
+	if(keyStates[(int)'j'])
+	{
+		phi+=0.5;
+		if(phi >= 89.0f)
+		{
+			phi = 89;
+		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// Handle gun fire ///////////////////////////////////////////////////////
+	//static bool fire = false;
+	//if(!fire && mouseButton & GLUT_LEFT_BUTTON)
+	//{
+	//	Vector3 pt; 
+	//	Vector3 n;
+	//	Object *intersectedObj = 
+	//		Core::GetIntersectObject(view_pos, view_pos.add(direction.scale(1000)), &pt, &n);
+
+	//	if(intersectedObj != nullptr)
+	//	{
+	//		//TODO: add physics support later
+	//		//p_bullet_explosion->
+	//	}
+	//}
 
 	//camera
 	Matrix4 m0,m1,m2;
 	//	
-
 	speed = speed - speed.scale(5).scale(spf);
 
 	Quat q0,q1;
@@ -170,6 +193,12 @@ static void idle()
 	z = Vector3::Cross(y,x);
 	view_pos = view_pos + (x.scale(speed['x']) + y.scale(speed['y']) + z.scale(speed['z'])).scale(spf);
 
+	static int cc = 0;
+	if(cc ++ == 10000)
+	{
+		view_pos.print();
+		cc = 0;
+	}
 	/*for(int i = 0; i < 4; i++) {
 	collide->collide(NULL,camera + (x * speed.x + y * speed.y + z * speed.z) * ifps / 4.0f,0.25);
 	for(int j = 0; j < collide->num_contacts; j++) {
@@ -183,65 +212,75 @@ static void idle()
 	glutPostRedisplay();
 }
 
+static void keyUp(unsigned char key, int x, int y)
+{
+	keyStates[key] = false;
+}
+
 static void keyboard(unsigned char key, int x, int y)
 {
-	int vel = 20;
-	switch(key)
-	{
-	case 'w':
-		speed.set(speed['x'] + vel * spf, 'x');
-		break;
-
-	case 's':
-		speed.set(speed['x'] - vel * spf, 'x');
-		break;
-
-	case 'a':
-		speed.set(speed['y'] - vel * spf, 'x');
-		break;
-
-	case 'd':
-		speed.set(speed['y'] + vel * spf, 'x');
-		break;
-	case 'u':
-		phi++;
-		psi--;
-		break;
-	}
-
+	keyStates[key] = true;
 }
 
 static void specialKey(int key, int x, int y)
 {
-
+	switch(key)
+	{
+	case GLUT_KEY_F11:
+		isFullScreen = !isFullScreen;
+		if (isFullScreen) 
+		{
+			glutFullScreen();
+		}
+		else {
+			glutReshapeWindow(1024, 768);
+			glutPositionWindow(100, 100);
+		}
+		break;
+	}
 }
 
 static void mouse(int btn, int state, int x, int y)
 {
-	mouseButton = btn;
-	mouseX = x;
-	mouseY = y;
-
-	/*if(btn == GLUT_LEFT_BUTTON)
+	if(btn == GLUT_LEFT_BUTTON)
 	{
-		if(state == GLUT_DOWN)
+		if(state == GLUT_UP)
 		{
-			mouseX = win_x / 2;
-			mouseY = win_y / 2;
+			isMouseHidden = true;
+			glutSetCursor(GLUT_CURSOR_NONE); 
 		}
-	}*/
+	}
 
+
+	if(btn == GLUT_RIGHT_BUTTON)
+	{
+		if(state == GLUT_UP)
+		{
+			isMouseHidden = false;
+			glutSetCursor(GLUT_CURSOR_LEFT_ARROW); 
+		}
+	}
 }
 
-static void mouseMotion(int x, int y)
+static void passiveMouseMotion(int x, int y)
 {
-	mouseX = x;
-	mouseY = y;
-	/*psi += (mouseX - win_x / 2) * 0.2;
-	phi += (mouseY - win_y / 2) * 0.2;
-	if(phi < -89) phi = -89;
-	if(phi > 89) phi = 89;
-*/
+	if(isMouseHidden)
+	{
+		int centerX = win_x / 2;
+		int centerY = win_y / 2;
+
+		int deltaX =  x - centerX;
+		int deltaY =  y - centerY;
+
+		if(deltaX != 0 || deltaY != 0) 
+		{
+			psi += deltaX * 0.2f;
+			phi += deltaY  * 0.2f;
+			if(phi < -89) phi = -89;
+			if(phi > 89) phi = 89;
+			glutWarpPointer(centerX, centerY);
+		}
+	}
 }
 
 static void setup()
@@ -259,18 +298,20 @@ int main(int argc, char *argv[])
 	glutInitWindowSize(win_x, win_y);
 	glutCreateWindow("CSE167_Final Project");
 
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 
 	initCore();
 
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
+	glutKeyboardUpFunc(keyUp);
+	glutSetKeyRepeat(GLUT_KEY_REPEAT_OFF);
 	glutSpecialFunc(specialKey);
 	glutReshapeFunc(reshape);
 	glutIdleFunc(idle);
 
 	glutMouseFunc(mouse);
-	glutMotionFunc(mouseMotion);
+	glutPassiveMotionFunc(passiveMouseMotion);
 
 	setup();
 	glutMainLoop();

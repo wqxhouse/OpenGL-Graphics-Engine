@@ -1,5 +1,0 @@
-<texture0>			smoke.png	RGBA	CLAMP
-
-<blend>				ONE	ONE
-
-<ambient_shader>	particle.shader

@@ -7,6 +7,8 @@
 #include "MeshFileObj.h"
 #include "BasicMath.h"
 #include "Material.h"
+#include <stdio.h>
+#include <time.h>
 
 
 /*****************************************************************************/
@@ -255,31 +257,46 @@ void Node::bindMaterial(const char *name, Material *material)
  */
 void Node::render() 
 {
+	static int count = 0;
+	//printf("<==render node: %d", count++);
 	if(left_ && right_) 
 	{
+		//printf("both not null\n");
 		int check_left = Core::frustum_->inside(left_->bsphere_.getCenter().getVector3(), left_->bsphere_.getRadius());
 		int check_right = Core::frustum_->inside(right_->bsphere_.getCenter().getVector3(), right_->bsphere_.getRadius());
 		if(check_left && check_right) 
 		{
+			//printf("  enter check both\n");
 			if((left_->bsphere_.getCenter().getVector3() - Core::camera_.getPosCoord()).getLength() 
 			< (right_->bsphere_.getCenter().getVector3() - Core::camera_.getPosCoord()).getLength())
 			{
+				//printf("    left first\n");
 				left_->render();
 				right_->render();
 			} 
 			else 
 			{
+				//printf("    right first\n");
 				right_->render();
 				left_->render();
 			}
 			return;
 		}
-		if(check_left) left_->render();
-		else if(check_right) right_->render();
+		if(check_left)
+		{
+			//printf("  check left\n");
+			left_->render();
+		}
+		else if(check_right)
+		{
+			//printf("  check right\n");
+			right_->render();
+		}
 		return;
 	}
 	if(object_ && object_->frame_ != Core::curr_frame_) 
 	{
+		//printf("enter render obj\n");
 		Sector *s = BSPTree::visible_sectors_.back();
 		s->visible_objects_.push_back(object_);
 		Core::num_triangles_ += object_->render();
@@ -438,10 +455,15 @@ void Portal::getScissor(int *scissor)
 void Portal::render() {
 	glBegin(GL_QUADS);
 	{
-		glVertex3fv(points_[0].getPointer());
+		/*glVertex3fv(points_[0].getPointer());
 		glVertex3fv(points_[1].getPointer());
 		glVertex3fv(points_[2].getPointer());
-		glVertex3fv(points_[3].getPointer());
+		glVertex3fv(points_[3].getPointer());*/
+		
+		glVertex3f(points_[0]['x'], points_[0]['y'], points_[0]['z']);
+		glVertex3f(points_[1]['x'], points_[1]['y'], points_[1]['z']);
+		glVertex3f(points_[2]['x'], points_[2]['y'], points_[2]['z']);
+		glVertex3f(points_[3]['x'], points_[3]['y'], points_[3]['z']);
 	}
 	glEnd();
 }
@@ -630,8 +652,11 @@ void Sector::render(Portal *portal)
 	BSPTree::visible_sectors_.push_back(this);
 	assert(BSPTree::visible_sectors_.size() <= BSPTree::sectors_.size() 
 		&& "visible_sectors shouldn't exceed the total number of sectors");
+
+	//bug fixed -> infinite inflate infinte object by not clearing visible obj array
+	visible_objects_.resize(0);
 	
-	root->render();
+		root->render();
 	
 	for(int i = 0; i < objects_.size(); i++) 
 	{
@@ -647,7 +672,7 @@ void Sector::render(Portal *portal)
 			visible_objects_.push_back(o);
 		}
 	}
-	
+
 	for(int i = 0; i < portals_.size(); i++) 
 	{
 		Portal *p = &BSPTree::portals_[portals_[i]];
@@ -657,36 +682,45 @@ void Sector::render(Portal *portal)
 		}
 
 		p->frame_ = Core::curr_frame_;
-
 		if(Core::frustum_->inside(p->bsphere_.getCenter().getVector3(), p->bsphere_.getRadius())) 
 		{
 			float dist = (Core::camera_.getPosCoord() - p->bsphere_.getCenter().getVector3()).getLength();
-			
-			if(Core::support_occlusion_ && dist > p->bsphere_.getRadius()) 
+
+			//TODO: occlusion query will cause blinking, needs further investigation
+			/*	if(Core::support_occlusion_ && dist > p->bsphere_.getRadius()) 
 			{
-				if(Material::old_material_)
-				{
-					Material::old_material_->disable();
-				}
-				
-				glDisable(GL_CULL_FACE);
-				glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
-				glDepthMask(GL_FALSE);
-				glBeginQueryARB(GL_SAMPLES_PASSED_ARB, Core::o_query_id_);
-				p->render();
-				glEndQueryARB(GL_SAMPLES_PASSED_ARB);
-				glDepthMask(GL_TRUE);
-				glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-				glEnable(GL_CULL_FACE);
-					
-				GLuint samples;
-				glGetQueryObjectuivARB(Core::o_query_id_, GL_QUERY_RESULT_ARB, &samples);
-				if(samples == 0)
-				{
-					continue;
-				}
+			if(Material::old_material_)
+			{
+			Material::old_material_->disable();
 			}
-			
+
+			glDisable(GL_CULL_FACE);
+			glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
+			glDepthMask(GL_FALSE);
+			glBeginQueryARB(GL_SAMPLES_PASSED_ARB, Core::o_query_id_);
+			p->render();
+			glEndQueryARB(GL_SAMPLES_PASSED_ARB);
+			glDepthMask(GL_TRUE);
+			glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+			glEnable(GL_CULL_FACE);
+
+			GLuint samples;
+			GLint avail;
+			do 
+			{
+			glGetQueryObjectivARB(Core::o_query_id_,
+			GL_QUERY_RESULT_AVAILABLE_ARB,
+			&avail);
+			} while (!avail);
+			glGetQueryObjectuivARB(Core::o_query_id_, GL_QUERY_RESULT_ARB, &samples);
+
+
+			if(samples == 0)
+			{
+			continue;
+			}
+			}*/
+
 			if(dist > p->bsphere_.getRadius())
 			{
 				Core::frustum_->addPortal(p->points_);
@@ -765,13 +799,13 @@ void BSPTree::load(const char *name)
 	int num_portals = 0;
 	int num_sectors = 0;
 
-	if(!strstr(name, ".obj"))
+	if(!strstr(name, ".obj")) //TODO: modify back
 	{
 		assert(false && "not a obj file");
 	}
 
 	MeshFileOBJ objmesh;
-	objmesh.load(name);
+	objmesh.load(name); //TODO: modify back
 	Mesh *mesh = new Mesh(objmesh, true); // create world mesh
 
 	//potential duplication of code

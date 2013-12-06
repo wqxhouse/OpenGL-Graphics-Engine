@@ -13,6 +13,7 @@
 #include "Texture.h"
 #include "MeshVBO.h"
 #include "MeshFileObj.h"
+#include "OGeometry.h"
 #include <glut/glut.h>
 
 // screen
@@ -30,7 +31,7 @@ std::vector<Light*> Core::lights_;
 std::vector<Light*> Core::visible_lights_;
 Light *Core::curr_light_;
 
-int Core::o_query_id_;
+GLuint Core::o_query_id_;
 bool Core::support_occlusion_;
 
 int Core::num_triangles_;
@@ -63,7 +64,7 @@ bool Core::render_shadow_;
 
 std::vector<char*> Core::filepaths_;
 
-int Core::texture_filter_;
+int Core::texture_filter_ = Texture::LINEAR_MIPMAP_LINEAR;
 
 std::map<std::string, Shader*>   Core::shaders_;
 std::map<std::string, Texture*>  Core::textures_;
@@ -88,6 +89,7 @@ int Core::init(int win_width, int win_height)
 
 	//assume my laptop's x4500 is ok with occ query
 	support_occlusion_ = true;
+	glGenQueriesARB(1, &o_query_id_);
 	
 	time_ = 0;
 	curr_frame_ = 0;
@@ -266,8 +268,8 @@ void Core::LoadScene(const char *name)
 	/*if(ex) extern_load(extern_load_data);
 	console->printf("load \"%s\" ok\n",name);*/
 
-	texture_  = new Texture(win_width_, win_height_, Texture::TEXTURE_2D,Texture::RGB | Texture::CLAMP | Texture::LINEAR);
-	material_ = LoadMaterial("screen.mat");
+	/*texture_  = new Texture(win_width_, win_height_, Texture::TEXTURE_2D,Texture::RGB | Texture::CLAMP | Texture::LINEAR);
+	material_ = LoadMaterial("screen.mat");*/
 }
 
 /*
@@ -435,60 +437,66 @@ void Core::render_light()
 {
 	glDepthMask(GL_FALSE);
 	
-	if(support_occlusion_) 
-	{
-		glDisable(GL_CULL_FACE);
-		glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
-	}
-	
-	// find visible lights
-	for(int i = 0; i < lights_.size(); i++) 
-	{
-		Light *l = lights_[i];
+	//if(support_occlusion_) 
+	//{
+	//	glDisable(GL_CULL_FACE);
+	//	glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
+	//}
+	//
+	//// find visible lights
+	//for(int i = 0; i < lights_.size(); i++) 
+	//{
+	//	Light *l = lights_[i];
 
-		for(int j = 0; j < l->pos_.sectors_.size(); j++) 
-		{
-			if(BSPTree::sectors_[l->pos_.sectors_[j]].frame_ != curr_frame_)
-			{
-				continue;
-			}
-			
-			if(frustum_->inside(l->pos(), l->radius()) == 0)
-			{
-				continue;
-			}
-			
-			if(support_occlusion_ && (l->pos() - camera_.getPosCoord()).getLength() > l->radius()) 
-			{
-				glPushMatrix();
-				glTranslatef(
-					l->pos_.getPosCoord()['x'], 
-					l->pos_.getPosCoord()['y'], 
-					l->pos_.getPosCoord()['z']);
+	//	for(int j = 0; j < l->pos_.sectors_.size(); j++) 
+	//	{
+	//		if(BSPTree::sectors_[l->pos_.sectors_[j]].frame_ != curr_frame_)
+	//		{
+	//			continue;
+	//		}
+	//		
+	//		if(frustum_->inside(l->pos(), l->radius()) == 0)
+	//		{
+	//			continue;
+	//		}
+	//		
+	//		if(support_occlusion_ && (l->pos() - camera_.getPosCoord()).getLength() > l->radius()) 
+	//		{
+	//			glPushMatrix();
+	//			glTranslatef(
+	//				l->pos_.getPosCoord()['x'], 
+	//				l->pos_.getPosCoord()['y'], 
+	//				l->pos_.getPosCoord()['z']);
 
-				glScalef(l->radius(), l->radius(), l->radius());
+	//			glScalef(l->radius(), l->radius(), l->radius());
 
-				glBeginQueryARB(GL_SAMPLES_PASSED_ARB, o_query_id_);
-				glutWireSphere(1.0f, 16, 8);
-				glEndQueryARB(GL_SAMPLES_PASSED_ARB);
-				glPopMatrix();
-				
-				GLuint samples;
-				glGetQueryObjectuivARB(o_query_id_, GL_QUERY_RESULT_ARB, &samples);
-				if(samples == 0) continue;
-			}
-			visible_lights_.push_back(l);
-			break;
-		}
-	}
-	
-	if(support_occlusion_) 
+	//			glBeginQueryARB(GL_SAMPLES_PASSED_ARB, o_query_id_);
+	//			glutWireSphere(1.0f, 16, 8);
+	//			glEndQueryARB(GL_SAMPLES_PASSED_ARB);
+	//			glPopMatrix();
+	//			
+	//			GLuint samples;
+	//			glGetQueryObjectuivARB(o_query_id_, GL_QUERY_RESULT_ARB, &samples);
+	//			printf("samples: %d\n", samples);
+
+	//			if(samples == 0) continue;
+	//		}
+	//		visible_lights_.push_back(l);
+	//		break;
+	//	}
+	//}
+	//if(support_occlusion_) 
+	//{
+	//	glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+	//	glEnable(GL_CULL_FACE);
+	//}
+	//
+	for(int i = 0; i < lights_.size(); i++)
 	{
-		glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-		glEnable(GL_CULL_FACE);
+		visible_lights_.push_back(lights_[i]);
 	}
-	
-	if(scissor_test_) glEnable(GL_SCISSOR_TEST);
+
+	//if(scissor_test_) glEnable(GL_SCISSOR_TEST);
 	
 	//if(shadow) glEnable(GL_STENCIL_TEST);
 	
@@ -506,37 +514,36 @@ void Core::render_light()
 		// scissor
 		int scissor[4];
 		l->getScissor(scissor);
-		if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
-		glDisable(GL_STENCIL_TEST);
+		//if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
 		
 		glDepthFunc(GL_EQUAL);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE,GL_ONE);
 
-		// all visible opacitie objects
 		for(int i = 0; i < BSPTree::visible_sectors_.size(); i++) 
 		{
 			Sector *s = BSPTree::visible_sectors_[i];
 			Portal *p = (s->frame_ == Core::curr_frame_) ? s->portal_ : nullptr;
-			if(p) 
-			{
-				int portal_scissor[4];
-				p->getScissor(portal_scissor);
-				portal_scissor[2] += portal_scissor[0];
-				portal_scissor[3] += portal_scissor[1];
-				if(portal_scissor[0] < scissor[0]) portal_scissor[0] = scissor[0];
-				if(portal_scissor[1] < scissor[1]) portal_scissor[1] = scissor[1];
-				if(portal_scissor[2] > scissor[0] + scissor[2]) portal_scissor[2] = scissor[0] + scissor[2];
-				if(portal_scissor[3] > scissor[1] + scissor[3]) portal_scissor[3] = scissor[1] + scissor[3];
-				portal_scissor[2] -= portal_scissor[0];
-				portal_scissor[3] -= portal_scissor[1];
-				if(portal_scissor[2] < 0 || portal_scissor[3] < 0) continue;
-				if(scissor_test_) glScissor(portal_scissor[0],portal_scissor[1],portal_scissor[2],portal_scissor[3]);
-			} else {
-				if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
-			}
+			//if(p) 
+			//{
+			//	int portal_scissor[4];
+			//	p->getScissor(portal_scissor);
+			//	portal_scissor[2] += portal_scissor[0];
+			//	portal_scissor[3] += portal_scissor[1];
+			//	if(portal_scissor[0] < scissor[0]) portal_scissor[0] = scissor[0];
+			//	if(portal_scissor[1] < scissor[1]) portal_scissor[1] = scissor[1];
+			//	if(portal_scissor[2] > scissor[0] + scissor[2]) portal_scissor[2] = scissor[0] + scissor[2];
+			//	if(portal_scissor[3] > scissor[1] + scissor[3]) portal_scissor[3] = scissor[1] + scissor[3];
+			//	portal_scissor[2] -= portal_scissor[0];
+			//	portal_scissor[3] -= portal_scissor[1];
+			//	if(portal_scissor[2] < 0 || portal_scissor[3] < 0) continue;
+			//	//if(scissor_test_) glScissor(portal_scissor[0],portal_scissor[1],portal_scissor[2],portal_scissor[3]);
+			//} else {
+			//	//if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
+			//}
 			for(int j = 0; j < s->visible_objects_.size(); j++) 
 			{
+
 				Object *o = s->visible_objects_[j];
 				if((o->pos_.getPosCoord() + o->getCenter() - light_pos_.getVector3()).getLength() < o->getRadius() + l->radius()) 
 				{
@@ -545,7 +552,7 @@ void Core::render_light()
 			}
 		}
 		
-		if(scissor_test_) glScissor(viewport_[0],viewport_[1],viewport_[2],viewport_[3]);
+		//if(scissor_test_) glScissor(viewport_[0],viewport_[1],viewport_[2],viewport_[3]);
 	
 		// disable material
 		if(Material::old_material_) Material::old_material_->disable();
@@ -554,18 +561,18 @@ void Core::render_light()
 		glDepthFunc(GL_LEQUAL);
 		
 		// clear stensil only if it is needed
-		if(l != visible_lights_[visible_lights_.size() - 1])
+		/*if(l != visible_lights_[visible_lights_.size() - 1])
 		{
-			glClear(GL_STENCIL_BUFFER_BIT);		
-		}
+		glClear(GL_STENCIL_BUFFER_BIT);		
+		}*/
 	}
 	curr_light_ = nullptr;
 	
-	if(scissor_test_) 
+	/*if(scissor_test_) 
 	{
 		glScissor(viewport_[0],viewport_[1],viewport_[2],viewport_[3]);
 		glDisable(GL_SCISSOR_TEST);
-	}
+	}*/
 	
 	glDepthMask(GL_TRUE);
 }
@@ -574,7 +581,7 @@ void Core::render_light()
  */
 void Core::RenderScene(float spf) 
 {
-	printf("%.5f\r", spf);
+	//printf("FPS: %.2f\r", 1.0f / spf);
 	// get matrixes
 	float projPOD[16];
 	float modelvPOD[16];
@@ -582,7 +589,6 @@ void Core::RenderScene(float spf)
 	glGetFloatv(GL_MODELVIEW_MATRIX,modelvPOD);
 	projection_ = Matrix4(projPOD);
 	modelview_  = Matrix4(modelvPOD);
-//	modelview_.print();
 
 	imodelview_ = modelview_.getInverse();
 	
@@ -599,16 +605,7 @@ void Core::RenderScene(float spf)
 	num_triangles_ = 0;
 	
 	// get viewport
-
-	glClear(GL_COLOR_BUFFER_BIT);
-
 	glGetIntegerv(GL_VIEWPORT, &viewport_[0]);
-
-	//// set matrix
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projection_.getPointer());
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(modelview_.getPointer());
 
 	// ambient pass
 	// clear depth buffer
@@ -640,7 +637,7 @@ void Core::RenderScene(float spf)
 	// wireframe
 	if(render_wires_) 
 	{
-		glColor3f(0,1,0);
+		glColor3f(0, 1, 0);
 		glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 		glEnable(GL_POLYGON_OFFSET_LINE);
 		glPolygonOffset(-0.5,0.0);
@@ -658,29 +655,6 @@ void Core::RenderScene(float spf)
 	}
 	
 	glFlush();
-	
-	texture_->bind();
-	texture_->copy();
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	// get viewport
-	glGetIntegerv(GL_VIEWPORT, &viewport_[0]);
-	
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1,1,-1,1,-1,1);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-
-	glDisable(GL_DEPTH_TEST);
-	glDepthMask(GL_FALSE);
-
-	material_->enable();
-	material_->bind();
-	material_->bindTexture(0, texture_);
-	texture_->render();
-	material_->disable();
 }
 
 /*****************************************************************************/

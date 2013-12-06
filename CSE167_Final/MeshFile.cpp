@@ -19,6 +19,7 @@ MeshFileOBJ::~MeshFileOBJ()
 
 int MeshFileOBJ::load(const char *name) 
 {
+	filename = name;
 	file.open(name, std::ios::binary | std::ios::in);
 	if(file.fail())
 	{

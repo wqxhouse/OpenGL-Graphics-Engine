@@ -145,7 +145,7 @@ public:
 	int getIntersection(const Vector3 &l0, const Vector3 &l1, Vector3 *point, Vector3 *normal, int surface_id = -1);
 	void transform_mesh(const Matrix4 &m);
 	void transform_surface(const Matrix4 &m, int surface_id);
-		
+	int load_mesh_mesh(const char *filename);
 	//struct Edge {
 	//	Vector3 v[2];
 	//	char reverse;

@@ -61,7 +61,7 @@ public:
 	static void render_light();
 
 	static bool support_occlusion_;
-	static int o_query_id_;
+	static GLuint o_query_id_;
 
 	// screen
 	static int win_width_;

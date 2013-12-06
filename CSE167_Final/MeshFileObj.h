@@ -13,6 +13,8 @@ public:
 	MeshFileOBJ();
 	virtual ~MeshFileOBJ();
 
+	inline const char* getFileName() const { return filename.c_str(); }
+
 	// loader
 	int load(const char *name);
 
@@ -54,4 +56,6 @@ private:
 	std::vector<Surface> surfaces;
 
 	std::ifstream file;
+
+	std::string filename;
 };

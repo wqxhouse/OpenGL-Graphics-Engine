@@ -64,7 +64,7 @@ Mesh::Mesh(const MeshFileOBJ &objmesh, bool isWorld /* = false*/)
 {
 	clearMesh();
 	load_obj_mesh(objmesh);
-
+	//load_mesh_mesh("data\\testing\\meshes\\physic.mesh");  //TODO: modify back
 	create_tangent();
 	if(!isWorld)
 	{
@@ -73,6 +73,13 @@ Mesh::Mesh(const MeshFileOBJ &objmesh, bool isWorld /* = false*/)
 	}
 	create_mesh_bounds();
 }
+
+struct load_mesh_Vertex 
+{
+	Vector3 xyz;
+	Vector3 normal;
+	Vector3 texcoord;
+};
 
 void Mesh::load_obj_mesh(const MeshFileOBJ &objmesh)
 {
@@ -506,7 +513,7 @@ void Mesh::create_tangent()
 			for(int k = 0; k < 3; k++) 
 			{
 				e0.set(v1->xyz[k + 'x'] - v0->xyz[k + 'x'], 'x');
-				e1.set(v2->xyz[k + 'x'] - v0->xyz[k + 'x'], 'y');
+				e1.set(v2->xyz[k + 'x'] - v0->xyz[k + 'x'], 'x');
 				Vector3 v = Vector3::Cross(e0, e1);
 
 				if(std::fabs(v['x']) > MATH_EPSILON) 

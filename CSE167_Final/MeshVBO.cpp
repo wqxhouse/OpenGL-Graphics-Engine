@@ -57,7 +57,7 @@ int MeshVBO::render(int pplShading,int surface_id)
 				glVertexAttribPointerARB(1,3,GL_FLOAT,0,sizeof(Vertex),(void*)(sizeof(Vector3) * 1));
 				glVertexAttribPointerARB(2,3,GL_FLOAT,0,sizeof(Vertex),(void*)(sizeof(Vector3) * 2));
 				glVertexAttribPointerARB(3,3,GL_FLOAT,0,sizeof(Vertex),(void*)(sizeof(Vector3) * 3));
-				glVertexAttribPointerARB(4,2,GL_FLOAT,0,sizeof(Vertex),(void*)(sizeof(Vector3) * 4));
+				glVertexAttribPointerARB(4,3,GL_FLOAT,0,sizeof(Vertex),(void*)(sizeof(Vector3) * 4));
 				int *indices = surfaces_[i]->indices;
 				for(int j = 0; j < surfaces_[i]->num_strips; j++) 
 				{
