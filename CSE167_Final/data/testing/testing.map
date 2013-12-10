@@ -9,36 +9,54 @@ data/testing/shaders/
 <data>
 bsp 
 {
-	mesh 	physic.obj
+	mesh 	sanctury.obj
 	
 	material	*									default.mat
 	
-	material	floor_*								floor_0.mat
-	material	floor_00|floor_01*|floor_02			floor_1.mat
-	material	ceiling_*							ceiling_0.mat
-	material	ceiling_10|ceiling_11|ceiling_12	ceiling_1.mat
-	material	ceiling_13|ceiling_15|ceiling_16	ceiling_1.mat
-	material	room_*								wall.mat
+	material ceiling_windows_glass                 glass.mat
 
 }
 
 
 light 
 {
-	pos { 6.8 44 5.5 }
-	color 0.7 0.7 0.7 1.0
+	pos {  -1.7518 15.2154 -6.5267  }
+	color 1 0.658824 0.498039 1
 	radius 20
 }
 
 light {
-	pos { -0.1 -0.73 4.0 }
-	color 0.7 0.7 0.7 1.0
-	radius 20
+	pos { 129.085 -97.97 32 }
+	color 0.748983 0.50931 0.239672 1
+	radius 90
 }
 
 light {
-	pos { -22 22 2.18 }
-	color 0.5 0.5 0.6 1.0
-	radius 15
+	pos { 20.772 -35.411 -2.083 }
+	color 0.607843 0.411765 0.180392 1
+	radius 28
 }
 
+light {
+	pos { 20.973 -75.96 -1.982 }
+	color 0.686145 0.466738 0.207439
+	radius 28
+}
+
+light {
+	pos { 52.3522 -137.522 17.1044 }
+	color 1 0.741165 0.321569 1
+	radius 45
+}
+
+light {
+	pos { 104.055 -137.522 17.1044 }
+	color 1 0.741165 0.321569 1
+	radius 45
+}
+
+light {
+	pos {  -0.134514 -0.0608673 1.13532 }
+	color 0.929412 0.666667 0.439216 1
+	radius 70
+}

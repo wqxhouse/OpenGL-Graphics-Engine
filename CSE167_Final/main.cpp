@@ -136,7 +136,7 @@ static void idle()
 	time += spf;
 
 	//handle keypresses/////////
-	float vel = 20;
+	float vel = 200;
 	if(keyStates[(int)'w']) speed.set(speed['x'] + vel * spf, 'x');
 	if(keyStates[(int)'s']) speed.set(speed['x'] - vel * spf, 'x');
 	if(keyStates[(int)'a']) speed.set(speed['y'] - vel * spf, 'y');
