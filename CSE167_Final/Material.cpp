@@ -50,19 +50,19 @@ void Material::load(const char *name)
 		sscanf(parser->get("alpha_test"),"%s %f",func,&alpha_ref_);
 		alpha_func_ = getAlphaFunc(func);
 	}
-	for(int i = 0; i < Shader::NUM_PARAMETERS; i++) 
+	/*for(int i = 0; i < Shader::NUM_PARAMETERS; i++) 
 	{
-		parameters_[i] = Vector4(0,0,0,0);
-		char buf[1024];
-		sprintf(buf,"parameter%d",i);
+	parameters_[i] = Vector4(0,0,0,0);
+	char buf[1024];
+	sprintf(buf,"parameter%d",i);
 
-		float xx, yy, zz, ww;
-		if(parser->get(buf)) sscanf(parser->get(buf),"%f %f %f %f", &xx,&yy,&zz,&ww);
-		parameters_[i].set(xx, 'x');
-		parameters_[i].set(yy, 'y');
-		parameters_[i].set(zz, 'z');
-		parameters_[i].set(ww, 'w');
-	}
+	float xx, yy, zz, ww;
+	if(parser->get(buf)) sscanf(parser->get(buf),"%f %f %f %f", &xx,&yy,&zz,&ww);
+	parameters_[i].set(xx, 'x');
+	parameters_[i].set(yy, 'y');
+	parameters_[i].set(zz, 'z');
+	parameters_[i].set(ww, 'w');
+	}*/
 	if(parser->get("light_shader")) 
 	{
 		light_shader_ = Core::LoadShader(parser->get("light_shader"));
@@ -252,10 +252,10 @@ void Material::bind()
 	{
 		if(blend_) glBlendFunc(sfactor_,dfactor_);
 		if(alpha_test_) glAlphaFunc(alpha_func_, alpha_ref_);
-		for(int i = 0; i < Shader::NUM_PARAMETERS; i++)
+		/*for(int i = 0; i < Shader::NUM_PARAMETERS; i++)
 		{
-			Shader::setParameter(i,parameters_[i]);
-		}
+		Shader::setParameter(i,parameters_[i]);
+		}*/
 		for(int i = 0; i < Shader::NUM_TEXTURES; i++)
 		{
 			bindTexture(i,textures_[i]);

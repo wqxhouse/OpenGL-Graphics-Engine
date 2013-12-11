@@ -1,433 +1,383 @@
-#include "core.h"
 #include "Shader.h"
+#include <assert.h>
+#include <string>
+#include "ShaderConstants.h"
+#include "core.h"
 #include "Texture.h"
+#include "Vector4.h"
 #include "Light.h"
-#include "Parser.h"
-/*
- */
+
+
 Shader *Shader::old_shader;
 Vector4 Shader::parameters[NUM_PARAMETERS];
 Texture *Shader::old_textures[NUM_TEXTURES];
 
-/*
- */
-Shader::Shader(const char *name) 
+Shader::Shader(const char *name)
+	: parser_(name)
 {
-	load(name);
+	program_id_ = 0;
+	clear();
+
+	char *vertex_src = parser_.get("vertex");
+	char *fragment_src = parser_.get("fragment");
+	
+	loadVertex(vertex_src);
+	loadFragment(fragment_src);
+	compile();
 }
 
-Shader::~Shader() {
-	if(vertex_target_ == GL_VERTEX_PROGRAM_ARB) 
+Shader::~Shader()
+{
+	clear();
+}
+
+/*
+ */
+int Shader::loadVertex(const char *src) 
+{
+	// create shader
+	GLhandleARB vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER);
+	
+	// compile shader
+	GLint status = 0;
+	glShaderSourceARB(vertex_shader,1,(const GLchar**)&src, nullptr);
+	glCompileShaderARB(vertex_shader);
+	glGetShaderiv(vertex_shader,GL_COMPILE_STATUS,&status);
+	if(status == GL_FALSE) 
 	{
-		if(vertex_id_) glDeleteProgramsARB(1,&vertex_id_);
+		char error[32768];
+		glGetShaderInfoLog(vertex_shader,sizeof(error), nullptr,error);
+		fprintf(stderr, "Vertex shader error log: %s\n", error);
+
+		//glDeleteObjectARB(vertex_shader);
+		//delete [] src;
+		return 0;
 	}
-	if(fragment_target_ == GL_FRAGMENT_PROGRAM_ARB) 
+	
+	// attach shader
+	if(program_id_ == 0)
 	{
-		if(fragment_id_) glDeleteProgramsARB(1,&fragment_id_);
-	} else if(fragment_target_ == GL_FRAGMENT_PROGRAM_NV) {
-		if(fragment_id_) glDeleteProgramsNV(1,&fragment_id_);
-	} else if(fragment_target_ == GL_COMBINE) {
-		glDeleteLists(fragment_id_,1);
+		program_id_ = glCreateProgramObjectARB();
+	}
+	glAttachObjectARB(program_id_,vertex_shader);
+	//glDeleteObjectARB(vertex_shader);
+	
+	// set vertex attributes
+	glBindAttribLocation(program_id_,0,"att_0");
+	glBindAttribLocation(program_id_,1,"att_1");
+	glBindAttribLocation(program_id_,2,"att_2");
+	glBindAttribLocation(program_id_,3,"att_3");
+	glBindAttribLocation(program_id_,4,"att_4");
+	glBindAttribLocation(program_id_,5,"att_5");
+	glBindAttribLocation(program_id_,6,"att_6");
+	glBindAttribLocation(program_id_,7,"att_7");
+	glBindAttribLocation(program_id_,8,"att_8");
+	glBindAttribLocation(program_id_,9,"att_9");
+	glBindAttribLocation(program_id_,10,"att_10");
+	glBindAttribLocation(program_id_,11,"att_11");
+	glBindAttribLocation(program_id_,12,"att_12");
+	glBindAttribLocation(program_id_,13,"att_13");
+	glBindAttribLocation(program_id_,14,"att_14");
+	glBindAttribLocation(program_id_,15,"att_15");
+	
+	//delete [] src;
+	return 1;
+}
+
+int Shader::loadFragment(const char *src)
+{
+	// create shader
+	GLhandleARB fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+	
+	// compile shader
+	GLint status = 0;
+	glShaderSourceARB(fragment_shader,1,(const GLchar**)&src, nullptr);
+	glCompileShaderARB(fragment_shader);
+	glGetShaderiv(fragment_shader,GL_COMPILE_STATUS,&status);
+	if(status == GL_FALSE) 
+	{
+		char error[32768];
+		glGetShaderInfoLog(fragment_shader,sizeof(error), nullptr, error);
+		fprintf(stderr, "Fragment shader error log: %s\n", error);
+		//glDeleteObjectARB(fragment_shader);
+		//delete [] src;
+		return 0;
+	}
+	
+	// attach shader
+	if(program_id_ == 0)
+	{
+		program_id_ = glCreateProgramObjectARB();
+	}
+	glAttachObjectARB(program_id_,fragment_shader);
+	//glDeleteObjectARB(fragment_shader);
+	
+	//delete [] src;
+	return 1;
+}
+
+
+int Shader::compile() 
+{
+	if(program_id_)
+	{
+		// link program
+		GLint status = 0;
+		glLinkProgramARB(program_id_);
+		glGetProgramiv(program_id_,GL_LINK_STATUS,&status);
+		if(status == GL_FALSE) 
+		{
+			char error[32768];
+			glGetProgramInfoLog(program_id_,sizeof(error),nullptr,error);
+			printf("Shader::compile(): %s",error);
+			//glDeleteObjectARB(1, &program_id_);
+			program_id_ = 0;
+			return 0;
+		}
+		
+		// set textures
+		GLint old_program_id = 0;
+		glGetIntegerv(GL_CURRENT_PROGRAM, &old_program_id);
+		glUseProgramObjectARB(program_id_);
+		for(int i = 0; i < 32; i++) 
+		{
+			char vertex[128];
+			sprintf(vertex,"s_vertex_%d",i);
+			GLint location = glGetUniformLocationARB(program_id_,vertex);
+			if(location >= 0) glUniform1i(location,i);
+		}
+		for(int i = 0; i < 32; i++) 
+		{
+			char texture[128];
+			sprintf(texture,"s_texture_%d",i);
+			GLint location = glGetUniformLocationARB(program_id_,texture);
+			if(location >= 0) glUniform1i(location,i);
+		}
+		glUseProgramObjectARB(old_program_id);
+		
+		// validate program
+		glValidateProgramARB(program_id_);
+		glGetProgramiv(program_id_,GL_VALIDATE_STATUS,&status);
+		if(status == GL_FALSE) 
+		{
+			char error[32768];
+			glGetProgramInfoLog(program_id_,sizeof(error),NULL,error);
+			printf("Shader::compile(): %s",error);
+			//glDeleteObjectARB(program_id_);
+			program_id_ = 0;
+			return 0;
+		}
+	}
+	
+	return 1;
+}
+
+void Shader::clear() 
+{
+	parameter_names_.clear();
+
+	if(glIsProgramARB(program_id_))
+	{
+		//glDeleteObjectARB(program_id_);
+	}
+	
+	program_id_ = 0;
+}
+
+int Shader::findParameter(const char *name) 
+{
+	std::map<std::string, int>::iterator it = parameter_names_.find(name);
+	if(it != parameter_names_.end())
+	{
+		return it->second;
+	}
+	if(program_id_) 
+	{
+		GLint location = glGetUniformLocationARB(program_id_, name);
+		if(location != -1) 
+		{
+			parameter_names_.emplace(std::make_pair(name, location));
+			return location;
+		}
+	}
+	parameter_names_.emplace(std::make_pair(name, -1));
+	return -1;
+}
+
+void Shader::setParameterBool(int location,int value) 
+{
+	glUniform1i(location,value);
+}
+
+void Shader::setParameterInt(int location,const int *value,int size) 
+{
+	switch(size) 
+	{
+		case 1: glUniform1iv(location,1,value); break;
+		case 2: glUniform2iv(location,1,value); break;
+		case 3: glUniform3iv(location,1,value); break;
+		case 4: glUniform4iv(location,1,value); break;
+		default: assert(0 && "Shader::setParameterInt(): bad parameter size");
 	}
 }
 
-/*****************************************************************************/
-/*                                                                           */
-/* load shader                                                               */
-/*                                                                           */
-/*****************************************************************************/
-
-/*
- */
-void Shader::load(const char *name) {
-	Parser *parser = new Parser(name);
-	// matrixes
-	num_matrixes = 0;
-	for(int i = 0; i < NUM_MATRIXES; i++) {
-		char buf[1024];
-		sprintf(buf,"matrix%d",i);
-		if(parser->get(buf)) {
-			matrixes[num_matrixes].num = i;
-			getMatrix(parser->get(buf),&matrixes[num_matrixes]);
-			num_matrixes++;
-		}
+void Shader::setParameterFloat(int location,const float *value,int size) 
+{
+	switch(size) 
+	{
+		case 1: glUniform1fv(location,1,value); break;
+		case 2: glUniform2fv(location,1,value); break;
+		case 3: glUniform3fv(location,1,value); break;
+		case 4: glUniform4fv(location,1,value); break;
+		case 9: glUniformMatrix3fv(location,1,GL_FALSE,value); break;
+		case 16: glUniformMatrix4fv(location,1,GL_FALSE,value); break;
+		default: assert(0 && "Shader::setParameterFloat(): bad parameter size");
 	}
-	// vertex program local parameters
-	num_vertex_parameters = 0;
-	for(int i = 0; i < NUM_LOCAL_PARAMETERS; i++) {
-		char buf[1024];
-		sprintf(buf,"vertex_local%d",i);
-		if(parser->get(buf)) {
-			vertex_parameters[num_vertex_parameters].num = i;
-			getLocalParameter(parser->get(buf),&vertex_parameters[num_vertex_parameters]);
-			num_vertex_parameters++;
-		}
-	}
-	// fragement program local parameters
-	num_fragment_parameters = 0;
-	for(int i = 0; i < NUM_LOCAL_PARAMETERS; i++) {
-		char buf[1024];
-		sprintf(buf,"fragment_local%d",i);
-		if(parser->get(buf)) {
-			fragment_parameters[num_fragment_parameters].num = i;
-			getLocalParameter(parser->get(buf),&fragment_parameters[num_fragment_parameters]);
-			num_fragment_parameters++;
-		}
-	}
-	char *data;
-	// vertex program
-	vertex_target_ = 0;
-	vertex_id_ = 0;
-	if((data = parser->get("vertex"))) {
-		int error = -1;
-		if(!strncmp(data,"!!ARBvp1.0",10)) {
-			vertex_target_ = GL_VERTEX_PROGRAM_ARB;
-			glGenProgramsARB(1,&vertex_id_);
-			glBindProgramARB(vertex_target_,vertex_id_);
-			glProgramStringARB(vertex_target_,GL_PROGRAM_FORMAT_ASCII_ARB,strlen(data),data);
-			glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB,&error);
-		} else {
-			char *s = data;
-			while(*s != '\0' && *s != '\n') s++;
-			*s = '\0';
-			fprintf(stderr,"Shader::Shader(): unknown vertex program header \"%s\" in \"%s\" file\n",data,name);
-		}
-		if(error != -1) {
-			int line = 0;
-			char *s = data;
-			while(error-- && *s) if(*s++ == '\n') line++;
-			while(s >= data && *s != '\n') s--;
-			char *e = ++s;
-			while(*e != '\0' && *e != '\n') e++;
-			*e = '\0';
-			fprintf(stderr,"Shader::Shader(): vertex program error in \"%s\" file at line %d:\n\"%s\"\n",name,line,s);
-		}
-	}
-	// fragment program
-	fragment_target_ = 0;
-	fragment_id_ = 0;
-	if((data = parser->get("fragment"))) {
-		int error = -1;
-		if(!strncmp(data,"!!ARBfp1.0",10)) {
-			fragment_target_ = GL_FRAGMENT_PROGRAM_ARB;
-			glGenProgramsARB(1,&fragment_id_);
-			glBindProgramARB(fragment_target_,fragment_id_);
-			glProgramStringARB(fragment_target_,GL_PROGRAM_FORMAT_ASCII_ARB,strlen(data),data);
-			glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB,&error);
-		} else if(!strncmp(data,"!!FP1.0",7)) {
-			fragment_target_ = GL_FRAGMENT_PROGRAM_NV;
-			glGenProgramsNV(1,&fragment_id_);
-			glBindProgramNV(fragment_target_,fragment_id_);
-			glLoadProgramNV(fragment_target_,fragment_id_,strlen(data),(GLubyte*)data);
-			glGetIntegerv(GL_PROGRAM_ERROR_POSITION_NV,&error);
-		} else if(!strncmp(data,"!!ARBtec1.0",11)) {	// arb texture env combine
-			fragment_target_ = GL_COMBINE;
-			fragment_id_ = compileARBtec(data);
-		} else {
-			char *s = data;
-			while(*s != '\0' && *s != '\n') s++;
-			*s = '\0';
-			fprintf(stderr,"Shader::Shader(): unknown fragment program header \"%s\" in \"%s\" file\n",data,name);
-		}
-		if(error != -1) {
-			int line = 0;
-			char *s = data;
-			while(error-- && *s) if(*s++ == '\n') line++;
-			while(s >= data && *s != '\n') s--;
-			char *e = ++s;
-			while(*e != '\0' && *e != '\n') e++;
-			*e = '\0';
-			fprintf(stderr,"Shader::Shader(): fragment program error in \"%s\" file at line %d:\n\"%s\"\n",name,line,s);
-		}
-	}
-	delete parser;
 }
 
-/*
- */
-GLuint Shader::compileARBtec(const char *src) {
-	const char *s = src;
-	GLuint list = glGenLists(1);
-	glNewList(list,GL_COMPILE);
-	if(strncmp("!!ARBtec1.0",s,11)) {
-		fprintf(stderr,"Shader::compileARBtec(): unknown header\n");
-		glEndList();
-		return list;
+void Shader::setParameterFloatArray(int location,const float *value,int size,int num) 
+{
+	switch(size)
+	{
+		case 1: glUniform1fv(location,num,value); break;
+		case 2: glUniform2fv(location,num,value); break;
+		case 3: glUniform3fv(location,num,value); break;
+		case 4: glUniform4fv(location,num,value); break;
+		case 9: glUniformMatrix3fv(location,num,GL_FALSE,value); break;
+		case 16: glUniformMatrix4fv(location,num,GL_FALSE,value); break;
+		default: assert(0 && "Shader::setParameterFloatArray(): bad parameter size");
 	}
-	s += 11;
-	int unit = -1;
-	while(*s) {
-		if(*s == '#') while(*s && *s != '\n') s++;
-		else if(strchr(" \t\n\r",*s)) s++;
-		else if(!strncmp("END",s,3)) break;
-		else {
-			int sources = 0;
-			if(unit > 0) glActiveTexture(GL_TEXTURE0 + unit);
-			while(*s) {
-				if(strchr(" \t",*s)) s++;
-				else if(!strncmp("nop",s,3) && (s += 3)) {
-					if(++unit > 0) glActiveTexture(GL_TEXTURE0 + unit);
-					glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-				}
-				else if(!strncmp("replace",s,7) && (s += 7)) {
-					if(++unit > 0) glActiveTexture(GL_TEXTURE0 + unit);
-					glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
-					glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_REPLACE);
-				}
-				else if(!strncmp("modulate",s,8) && (s += 8)) {
-					if(++unit > 0) glActiveTexture(GL_TEXTURE0 + unit);
-					glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
-					glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_MODULATE);
-				}
-				else if(!strncmp("add",s,3) && (s += 3)) {
-					if(++unit > 0) glActiveTexture(GL_TEXTURE0 + unit);
-					glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
-					glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_ADD);
-				}
-				else if(!strncmp("add_signed",s,10) && (s += 10)) {
-					if(++unit > 0) glActiveTexture(GL_TEXTURE0 + unit);
-					glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
-					glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_ADD_SIGNED);
-				}
-				else if(!strncmp("sub",s,3) && (s += 3)) {
-					if(++unit > 0) glActiveTexture(GL_TEXTURE0 + unit);
-					glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
-					glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_SUBTRACT);
-				}
-				else if(!strncmp("dot3",s,4) && (s += 4)) {
-					if(++unit > 0) glActiveTexture(GL_TEXTURE0 + unit);
-					glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_COMBINE);
-					glTexEnvi(GL_TEXTURE_ENV,GL_COMBINE_RGB,GL_DOT3_RGB);
-				}
-				else if(!strncmp("primary",s,7) && (s += 7)) glTexEnvi(GL_TEXTURE_ENV,GL_SOURCE0_RGB + sources++,GL_PRIMARY_COLOR);
-				else if(!strncmp("texture0",s,8) && (s += 8)) glTexEnvi(GL_TEXTURE_ENV,GL_SOURCE0_RGB + sources++,GL_TEXTURE0);
-				else if(!strncmp("texture1",s,8) && (s += 8)) glTexEnvi(GL_TEXTURE_ENV,GL_SOURCE0_RGB + sources++,GL_TEXTURE1);
-				else if(!strncmp("texture2",s,8) && (s += 8)) glTexEnvi(GL_TEXTURE_ENV,GL_SOURCE0_RGB + sources++,GL_TEXTURE2);
-				else if(!strncmp("texture3",s,8) && (s += 8)) glTexEnvi(GL_TEXTURE_ENV,GL_SOURCE0_RGB + sources++,GL_TEXTURE3);
-				else if(!strncmp("texture",s,7) && (s += 7)) glTexEnvi(GL_TEXTURE_ENV,GL_SOURCE0_RGB + sources++,GL_TEXTURE0 + unit);
-				else if(!strncmp("previous",s,8) && (s += 8)) glTexEnvi(GL_TEXTURE_ENV,GL_SOURCE0_RGB + sources++,GL_PREVIOUS);
-				else if(!strncmp("scale2",s,6) && (s += 6)) glTexEnvi(GL_TEXTURE_ENV,GL_RGB_SCALE,2);
-				else if(!strncmp("scale4",s,6) && (s += 6)) glTexEnvi(GL_TEXTURE_ENV,GL_RGB_SCALE,4);
-				else if(*s == '\n' && s++) break;
-				else {
-					printf("%s\n",s);
-					char buf[1024];
-					char *d = buf;
-					while(*s && !strchr(" \t\n\r",*s)) *d++ = *s++;
-					*d = '\0';
-					fprintf(stderr,"Shader::compileARBtec(): unknown token \"%s\"\n",buf);
-					glEndList();
-					return list;
-				}
-			}
-			for(int i = 0; i < sources; i++) glTexEnvi(GL_TEXTURE_ENV,GL_OPERAND0_RGB + i,GL_SRC_COLOR);
-		}
-	}
-	if(unit > 1) glActiveTexture(GL_TEXTURE0);
-	glEndList();
-	return list;
+}
+void Shader::setParameterBool(const char *name,int value) 
+{
+	int id = findParameter(name);
+	//if(id == -1) printf("Shader::setParameterBool(): can't find \"%s\" parameter\n",name);
+	//else 
+		setParameterBool(id,value);
 }
 
-/*
- */
-void Shader::getMatrix(const char *name,Matrix *m) {
-	if(!strcmp(name,"projection")) m->type = PROJECTION;
-	else if(!strcmp(name,"modelview")) m->type = MODELVIEW;
-	else if(!strcmp(name,"imodelview")) m->type = IMODELVIEW;
-	else if(!strcmp(name,"transform")) m->type = TRANSFORM;
-	else if(!strcmp(name,"itransform")) m->type = ITRANSFORM;
-	else if(!strcmp(name,"light_transform")) m->type = LIGHT_TRANSFORM;
-	else fprintf(stderr,"Shader::getMatrix(): unknown matrix \"%s\"\n",name);
+void Shader::setParameterInt(const char *name,const int *value,int size) {
+	int id = findParameter(name);
+	//if(id == -1) printf("Shader::setParameterInt(): can't find \"%s\" parameter\n",name);
+	//else 
+		setParameterInt(id,value,size);
 }
 
-void Shader::getLocalParameter(const char *name,Shader::LocalParameter *p) {
-	if(!strcmp(name,"time")) p->type = TIME;
-	else if(!strcmp(name,"sin")) p->type = SIN;
-	else if(!strcmp(name,"cos")) p->type = COS;
-	else if(!strcmp(name,"camera")) p->type = CAMERA;
-	else if(!strcmp(name,"icamera")) p->type = ICAMERA;
-	else if(!strcmp(name,"light")) p->type = LIGHT;
-	else if(!strcmp(name,"ilight")) p->type = ILIGHT;
-	else if(!strcmp(name,"light_color")) p->type = LIGHT_COLOR;
-	else if(!strcmp(name,"fog_color")) p->type = FOG_COLOR;
-	else if(!strcmp(name,"viewport_")) p->type = VIEWPORT;
-	else if(!strncmp(name,"parameter",9)) {
-		p->type = PARAMETER;
-		sscanf(name + 9,"%d",&p->parameter);
-		if(p->parameter >= NUM_PARAMETERS) {
-			fprintf(stderr,"Shader::getLocalParameter(): number of parameters is big\n");
-			p->parameter = 0;
-		}
-	}
-	else fprintf(stderr,"Shader::getLocalParameter(): unknown parameter \"%s\"\n",name);
+void Shader::setParameterFloat(const char *name,const float *value,int size) {
+	int id = findParameter(name);
+	//if(id == -1) printf("Shader::setParameterFloat(): can't find \"%s\" parameter\n",name);
+	//else 
+		setParameterFloat(id,value,size);
+}
+
+void Shader::setParameterFloatArray(const char *name,const float *value,int size,int num) {
+	int id = findParameter(name);
+//	if(id == -1) printf("Shader::setParameterFloatArray(): can't find \"%s\" parameter\n",name);
+	//else 
+		setParameterFloatArray(id,value,size,num);
 }
 
 /*
  */
-void Shader::setParameter(int num,const Vector4 &parameter) {
-	parameters[num] = parameter;
-}
-
-/*****************************************************************************/
-/*                                                                           */
-/* enable/disable/bind                                                       */
-/*                                                                           */
-/*****************************************************************************/
-
-/*
- */
-void Shader::enable() {
+void Shader::enable()  
+{
 	if(old_shader == this) return;
-	if(old_shader) {
-		if(old_shader->vertex_target_ != vertex_target_) {
-			if(old_shader->vertex_target_) glDisable(old_shader->vertex_target_);
-			if(vertex_target_) glEnable(vertex_target_);
+	if(old_shader) 
+	{
+		old_shader->disable();
+		if(program_id_)
+		{
+			glUseProgramObjectARB(program_id_);	
 		}
-		if(old_shader->fragment_target_ != fragment_target_) {
-			if(old_shader->fragment_target_ == GL_FRAGMENT_PROGRAM_ARB) glDisable(old_shader->fragment_target_);
-			else if(old_shader->fragment_target_ == GL_FRAGMENT_PROGRAM_NV) glDisable(old_shader->fragment_target_);
-			else if(old_shader->fragment_target_ == GL_COMBINE) {
-				glActiveTexture(GL_TEXTURE0);
-				glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-				glActiveTexture(GL_TEXTURE1);
-				glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-				glActiveTexture(GL_TEXTURE2);
-				glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-				glActiveTexture(GL_TEXTURE3);
-				glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-				glActiveTexture(GL_TEXTURE0);
-			}
-			if(fragment_target_ == GL_FRAGMENT_PROGRAM_ARB) glEnable(fragment_target_);
-			else if(fragment_target_ == GL_FRAGMENT_PROGRAM_NV) glEnable(fragment_target_);
+	}
+	else 
+	{
+		if(program_id_)
+		{
+			glUseProgramObjectARB(program_id_);	
 		}
-	} else {
-		if(vertex_target_) glEnable(vertex_target_);
-		if(fragment_target_ == GL_FRAGMENT_PROGRAM_ARB) glEnable(fragment_target_);
-		else if(fragment_target_ == GL_FRAGMENT_PROGRAM_NV) glEnable(fragment_target_);
 	}
 }
 
-/*
- */
-void Shader::disable() {
-	if(vertex_target_) glDisable(vertex_target_);
-	if(fragment_target_ == GL_FRAGMENT_PROGRAM_ARB) glDisable(fragment_target_);
-	else if(fragment_target_ == GL_FRAGMENT_PROGRAM_NV) glDisable(fragment_target_);
-	else if(fragment_target_ == GL_COMBINE) {
-		glActiveTexture(GL_TEXTURE0);
-		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-		glActiveTexture(GL_TEXTURE1);
-		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-		glActiveTexture(GL_TEXTURE2);
-		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-		glActiveTexture(GL_TEXTURE3);
-		glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
-	}
-	for(int i = 0; i < NUM_TEXTURES; i++) {
-		if(old_textures[i]) {
+void Shader::disable()  
+{
+	if(program_id_) glUseProgramObjectARB(0);
+
+	for(int i = 0; i < 6; i++) 
+	{
+		if(old_textures[i]) 
+		{
 			glActiveTexture(GL_TEXTURE0 + i);
 			old_textures[i]->disable();
 		}
 		old_textures[i] = NULL;
 	}
 	glActiveTexture(GL_TEXTURE0);
-	old_shader = NULL;
+	old_shader = nullptr;
 }
 
-/*
- */
-void Shader::bind() {
-	if(old_shader != this) {
-		if(vertex_target_ == GL_VERTEX_PROGRAM_ARB) glBindProgramARB(vertex_target_,vertex_id_);
-		if(fragment_target_ == GL_FRAGMENT_PROGRAM_ARB) glBindProgramARB(fragment_target_,fragment_id_);
-		else if(fragment_target_ == GL_FRAGMENT_PROGRAM_NV) glBindProgramNV(fragment_target_,fragment_id_);
-		else if(fragment_target_ == GL_COMBINE) glCallList(fragment_id_);
+void Shader::bind()  
+{
+	if(old_shader != this) 
+	{
 		old_shader = this;
 	}
-	for(int i = 0; i < num_matrixes; i++) 
-	{
-		glMatrixMode(GL_MATRIX0_ARB + matrixes[i].num);
-		if(matrixes[i].type == PROJECTION) glLoadMatrixf(Core::projection_.getPointer());
-		else if(matrixes[i].type == MODELVIEW) glLoadMatrixf(Core::modelview_.getPointer());
-		else if(matrixes[i].type == IMODELVIEW) glLoadMatrixf(Core::imodelview_.getPointer());
-		else if(matrixes[i].type == TRANSFORM) glLoadMatrixf(Core::transform_.getPointer());
-		else if(matrixes[i].type == ITRANSFORM) glLoadMatrixf(Core::itransform_.getPointer());
-		else if(matrixes[i].type == LIGHT_TRANSFORM && Core::curr_light_) glLoadMatrixf(Core::curr_light_->transform_.getPointer());
-	}
-	if(num_matrixes)
-	{
-		glMatrixMode(GL_MODELVIEW);
-	}
-	for(int i = 0; i < num_vertex_parameters; i++) 
-	{
-		if(vertex_parameters[i].type == TIME)
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num,Vector4(Core::time_,Core::time_ / 2.0f,Core::time_ / 3.0f,Core::time_ / 5.0f).getPointer());
-		}
-		else if(vertex_parameters[i].type == SIN)
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num,Vector4(sin(Core::time_),sin(Core::time_ / 2.0f),sin(Core::time_ / 3.0f),sin(Core::time_ / 5.0f)).getPointer());
-		}
-		else if(vertex_parameters[i].type == COS)
-		{ 
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num,Vector4(cos(Core::time_),cos(Core::time_ / 2.0f),cos(Core::time_ / 3.0f),cos(Core::time_ / 5.0f)).getPointer());
-		}
-		else if(vertex_parameters[i].type == CAMERA)
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num,Vector4(Core::camera_.getPosCoord(),1).getPointer());
-		}
-		else if(vertex_parameters[i].type == ICAMERA) 
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num,Vector4(Core::itransform_.multiplyVec3(Core::camera_.getPosCoord()), 1).getPointer());
-		}
-		else if(vertex_parameters[i].type == LIGHT)
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num, Core::light_pos_.getPointer());
-		}
-		else if(vertex_parameters[i].type == ILIGHT)
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num, Vector4(Core::itransform_.multiplyVec3(Core::light_pos_.getVector3()), Core::light_pos_['w']).getPointer());
-		}
-		else if(vertex_parameters[i].type == LIGHT_COLOR)
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num,Core::light_color_.getPointer());
-		} 
 
-		else if(vertex_parameters[i].type == VIEWPORT)
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num,Vector4(Core::viewport_[0],Core::viewport_[1],Core::viewport_[2],Core::viewport_[3]).getPointer());
-		}
-		else if(vertex_parameters[i].type == PARAMETER)
-		{
-			glProgramLocalParameter4fvARB(vertex_target_,vertex_parameters[i].num,parameters[vertex_parameters[i].parameter].getPointer());
-		}
-	}
-	for(int i = 0; i < num_fragment_parameters; i++) {
-	if(vertex_parameters[i].type == TIME) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Vector4(Core::time_,Core::time_ / 2.0f,Core::time_ / 3.0f,Core::time_ / 5.0f).getPointer());
-	else if(vertex_parameters[i].type == SIN) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Vector4(sin(Core::time_),sin(Core::time_ / 2.0f),sin(Core::time_ / 3.0f),sin(Core::time_ / 5.0f)).getPointer());
-	else if(vertex_parameters[i].type == COS) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Vector4(cos(Core::time_),cos(Core::time_ / 2.0f),cos(Core::time_ / 3.0f),cos(Core::time_ / 5.0f)).getPointer());
-	else if(fragment_parameters[i].type == CAMERA) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Vector4(Core::camera_.getPosCoord(),1).getPointer());
-	else if(fragment_parameters[i].type == ICAMERA) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Vector4(Core::itransform_.multiplyVec3(Core::camera_.getPosCoord()),1).getPointer());
-	else if(fragment_parameters[i].type == LIGHT) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Core::light_pos_.getPointer());
-	else if(fragment_parameters[i].type == ILIGHT) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Vector4(Core::itransform_.multiplyVec3(Core::light_pos_.getVector3()), Core::light_pos_['w']).getPointer());
-	else if(fragment_parameters[i].type == LIGHT_COLOR) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Core::light_color_.getPointer());
-	else if(fragment_parameters[i].type == VIEWPORT) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,Vector4(Core::viewport_[0],Core::viewport_[1],Core::viewport_[2],Core::viewport_[3]).getPointer());
-	else if(fragment_parameters[i].type == PARAMETER) glProgramLocalParameter4fvARB(fragment_target_,fragment_parameters[i].num,parameters[fragment_parameters[i].parameter].getPointer());
-	}
+	setShaderParameters();
 }
 
-/*****************************************************************************/
-/*                                                                           */
-/* bind texture                                                              */
-/*                                                                           */
-/*****************************************************************************/
 /*
  */
-void Shader::bindTexture(int unit,Texture *texture) 
+GLuint Shader::getProgramID() const 
+{
+	return program_id_;
+}
+
+void Shader::setShaderParameters()
+{
+	setParameterFloat(SHADER_PROJECTION, Core::projection_.getPointer(), 16);
+	setParameterFloat(SHADER_MODELVIEW, Core::modelview_.getPointer(), 16);
+	setParameterFloat(SHADER_IMODELVIEW, Core::transform_.getPointer(), 16);
+	setParameterFloat(SHADER_TRANSFORM, Core::transform_.getPointer(), 16);
+	setParameterFloat(SHADER_ITRANSFORM, Core::itransform_.getPointer(), 16);
+
+	setParameterFloat(SHADER_CAMERA_POSITION,Core::light_pos_.getPointer(), 4);
+	setParameterFloat(SHADER_CAMERA_INVERSE, Vector4(Core::itransform_.multiplyVec3(Core::camera_.getPosCoord()), 1).getPointer(), 16);
+	//setParameterFloat(SHADER_CAMERA_DIRECTION, Core::direction_, 3);
+
+	//lights
+	setParameterFloat(SHADER_LIGHT_POSITION, Core::light_pos_.getPointer(),4);
+	setParameterFloat(SHADER_LIGHT_POS_INVERSE, Vector4(Core::itransform_.multiplyVec3(Core::light_pos_.getVector3()), Core::light_pos_['w']).getPointer(), 4);
+	//setParameterFloat(SHADER_LIGHT_DIRECTION,light_direction,3);
+	setParameterFloat(SHADER_LIGHT_COLOR, Core::light_color_.getPointer(),4);
+
+	if(Core::curr_light_ != nullptr)
+	{
+		setParameterFloat(SHADER_LIGHT_IRADIUS, Vector4(1.0f / Core::curr_light_->radius(),
+			1.0f / Core::curr_light_->radius(),
+			1.0f / Core::curr_light_->radius(),
+			1).getPointer(), 4);
+	}
+	
+	// light transformation
+	setParameterFloat(SHADER_LIGHT_TRANSFORM, Core::curr_light_->transform_.getPointer(), 16);
+
+	//shadow parameters
+	/*setParameterFloat(SHADER_LIGHT_SHADOW_OFFSET,light_shadow_offset,3);
+	setParameterFloatArray(SHADER_LIGHT_SHADOW_OFFSETS,light_shadow_offsets[0],4,4);
+	setParameterFloat4(SHADER_LIGHT_SHADOW_IRADIUS,Math::rcpf(light_shadow_radius),light_shadow_ambient,light_shadow_softness * 2.0f,light_shadow_softness * 4.0f);
+	setParameterFloat(SHADER_LIGHT_SHADOW_DEPTH_BIAS,light_shadow_depth_bias / 1000.0f,3);
+	setParameterFloat(SHADER_LIGHT_SHADOW_DEPTH_RANGE,light_shadow_depth_range,2);
+	setParameterFloat(SHADER_LIGHT_SHADOW_PROJECTION,light_shadow_projections[0],16);
+	setParameterFloatArray(SHADER_LIGHT_SHADOW_PROJECTIONS,light_shadow_projections[0],16,4);*/
+}
+
+void Shader::bindTexture(int unit, Texture *texture)
 {
 	if(old_textures[unit] == texture) return;
 	glActiveTexture(GL_TEXTURE0 + unit);
-	if(texture) {
+	if(texture)
+	{
 		if(old_textures[unit] == NULL) texture->enable();
 		else if(texture->target != old_textures[unit]->target) 
 		{
@@ -435,7 +385,8 @@ void Shader::bindTexture(int unit,Texture *texture)
 			texture->enable();
 		}
 		texture->bind();
-	} else {
+	} else 
+	{
 		if(old_textures[unit]) old_textures[unit]->disable();
 	}
 	old_textures[unit] = texture;

@@ -103,7 +103,6 @@ int OGeometry::render(int surface_id)
 	
 	}
 	
-	
 	disable();
 	return num_triangles;
 }

@@ -1,250 +1,75 @@
-/*	light shader (diffuse, specular, gloss)
- *	defines: VERTEX, NV3X, HALF, TEYLOR
- *
- *			written by Alexander Zaprjagaev
- *			frustum@frustum.org
- *			http://frustum.org
- */
-
-#ifdef VERTEX
-
-/*****************************************************************************/
-/*                                                                           */
-/* simple vertex lighting                                                    */
-/*                                                                           */
-/*****************************************************************************/
-
-<vertex_local0> ilight
-<vertex_local1> light_color
-
 <vertex>
+#version 120
 
-!!ARBvp1.0
+attribute vec3 att_0;
+attribute vec3 att_1;
+attribute vec3 att_2;
+attribute vec3 att_3;
+attribute vec4 att_4;
 
-ATTRIB xyz = vertex.attrib[0];
-ATTRIB normal = vertex.attrib[1];
-ATTRIB st = vertex.attrib[4];
+uniform vec3 s_camera_inverse;
+uniform vec3 s_light_pos_inverse;
+uniform float s_light_iradius;
 
-PARAM mvp[4] = { state.matrix.mvp };
-PARAM light = program.local[0];
-PARAM light_color = program.local[1];
+//shadows
+uniform vec3 s_light_position;
+uniform mat4 s_transform; // light_transform?
 
-DP4 result.position.x, mvp[0], xyz;
-DP4 result.position.y, mvp[1], xyz;
-DP4 result.position.z, mvp[2], xyz;
-DP4 result.position.w, mvp[3], xyz;
 
-MOV result.texcoord[0], st;
+void main() 
+{
+	gl_Position = gl_ModelViewProjectionMatrix * vec4(att_0,1.0);
+	
+	gl_TexCoord[0] = att_4;
+	
+	vec3 dir = (s_light_pos_inverse - att_0) * s_light_iradius;
+	gl_TexCoord[1].x = dot(dir, att_2);
+	gl_TexCoord[1].y = dot(dir, att_3);
+	gl_TexCoord[1].z = dot(dir, att_1);
+	gl_TexCoord[1].w = 1;
+	
+	dir = s_camera_inverse - att_0;
+	gl_TexCoord[2].x = dot(dir, att_2);
+	gl_TexCoord[2].y = dot(dir, att_3);
+	gl_TexCoord[2].z = dot(dir, att_1);
+	
+	gl_TexCoord[3] = vec4(0.2, 0.2, 0.2, 1.0); // e_color 
 
-TEMP dir, color;
-
-SUB dir, light, xyz;
-DP3 dir.w, dir, dir;
-MAD color.w, dir.w, -light.w, 1.0;
-MAX color.w, color.w, 0.0;
-
-RSQ dir.w, dir.w;
-MUL dir, dir, dir.w;
-DP3 color.xyz, dir, normal;
-
-MUL color, color, color.w;
-
-MUL result.color, color, light_color;
-
-END
+	dir = (s_transform * vec4(att_0, 1.0)).xyz - s_light_position;
+	gl_TexCoord[6] = vec4(dir * s_light_iradius, 1.0);
+}
 
 <fragment>
+#version 120
 
-!!ARBtec1.0
+uniform sampler2D s_texture_0;
+uniform sampler2D s_texture_1;
+uniform samplerCube s_texture_5;
 
-modulate texture primary
-
-END
-
-#else
-
-/*****************************************************************************/
-/*                                                                           */
-/* perpixel lighting                                                         */
-/*                                                                           */
-/*****************************************************************************/
-
-<vertex_local0> icamera
-<vertex_local1> ilight
-<vertex_local2> light_color
-
-/*
- */
-<vertex>
-
-!!ARBvp1.0
-
-ATTRIB xyz = vertex.attrib[0];
-ATTRIB normal = vertex.attrib[1];
-ATTRIB tangent = vertex.attrib[2];
-ATTRIB binormal = vertex.attrib[3];
-ATTRIB st = vertex.attrib[4];
-
-PARAM mvp[4] = { state.matrix.mvp };
-PARAM camera = program.local[0];
-PARAM light = program.local[1];
-PARAM light_color = program.local[2];
-
-DP4 result.position.x, mvp[0], xyz;
-DP4 result.position.y, mvp[1], xyz;
-DP4 result.position.z, mvp[2], xyz;
-DP4 result.position.w, mvp[3], xyz;
-
-MOV result.texcoord[0], st;
-
-TEMP dir;
-SUB dir, light, xyz;
-DP3 result.texcoord[1].x, tangent, dir;
-DP3 result.texcoord[1].y, binormal, dir;
-DP3 result.texcoord[1].z, normal, dir;
-MOV result.texcoord[1].w, light.w;
-
-#ifdef HALF
-	DP3 dir.w, dir, dir;
-	RSQ dir.w, dir.w;
-	MUL dir, dir, dir.w;
+void main() 
+{
+	float attenuation = clamp(gl_TexCoord[1].w - dot(gl_TexCoord[1].xyz,gl_TexCoord[1].xyz),0.0,1.0);
 	
-	TEMP half;
-	SUB half, camera, xyz;
-	DP3 half.w, half, half;
-	RSQ half.w, half.w;
-	MUL half, half, half.w;
+	vec3 light_dir = normalize(gl_TexCoord[1].xyz);
 	
-	ADD half, half, dir;
+	vec4 base = texture2D(s_texture_0,gl_TexCoord[0].xy);
+	vec4 gloss = texture2D(s_texture_1,gl_TexCoord[0].xy);
+	vec3 normal = normalize(gloss.xyz * 2.0 - 1.0);
 	
-	DP3 result.texcoord[2].x, tangent, half;
-	DP3 result.texcoord[2].y, binormal, half;
-	DP3 result.texcoord[2].z, normal, half;
-#else
-	SUB dir, camera, xyz;
-	DP3 result.texcoord[2].x, tangent, dir;
-	DP3 result.texcoord[2].y, binormal, dir;
-	DP3 result.texcoord[2].z, normal, dir;
-#endif /* HALF */
-
-MOV result.color, light_color;
-
-END
-
-/*
- */
-<fragment>
-
-#ifdef NV3X
-
-/*****************************************************************************/
-/*                                                                           */
-/* NV3X fragment program code                                                */
-/*                                                                           */
-/*****************************************************************************/
-!!FP1.0
-
-DP3H H0.w, f[TEX1], f[TEX1];			// H0.w - |light - xyz|
-MADH_SAT H5.w, H0.w, -f[TEX1].w, 1.0;	// H5.w - 1.0 - |light - xyz| / (radius * radius)
-
-TEX H0, f[TEX0], TEX1, 2D;				// H0 - normal
-MADX H0, H0, 2.0, -1.0;					// expand normal
-
-TEX H1, f[TEX1], TEX2, CUBE;			// H1 - light direction
-MADX H1, H1, 2.0, -1.0;
-
-TEX H2, f[TEX2], TEX2, CUBE;			// H2 - camera direction or half angle
-MADX H2, H2, 2.0, -1.0;
-
-#ifdef TEYLOR
-	DP3X H6.x, H0, H0;
-	DP3X H6.y, H1, H1;
-	DP3X H6.z, H2, H2;
+	//shadow map
+	float dist_0 = length(gl_TexCoord[6].xyz);
 	
-	MADX H6, H6, -0.5, 0.5;
+	vec4 depth = textureCube(s_texture_5,gl_TexCoord[6].xyz);
+	float dist_1 = dot(depth,vec4(1.0,0.00390625,0.0000152587890625,0.000000059604644775390625));
 	
-	MADX H0, H0, H6.x, H0;
-	MADX H1, H1, H6.y, H1;
-	MADX H2, H2, H6.z, H2;
-#endif	/* TEYLOR */
+	if(dist_0 > dist_1 + 0.005) attenuation = 0.0;
 
-DP3X H4.w, H0, H1;
-
-TEX H3, f[TEX0], TEX0, 2D;				// H3 - diffuse
-MULX H4, H4.w, H3;						// H4 - diffuse * base
-
-#ifdef HALF
-	DP3X_SAT H2.w, H0, H2;
-	POWH_SAT H2.w, H2.w, 32.0;			// H2 - specular
-#else
-	RFLH H1, H0, H1;
-	DP3X_SAT H2.w, H2, H1;
-	POWH_SAT H2.w, H2.w, 16.0;
-#endif	/* HALF */
-
-MADX H4, H2.w, H3.w, H4;				// (diffuse * base + specular)
-MULX H4, H4, H5.w;						// (diffuse * base + specular) * attenuation
-MULX o[COLH], H4, f[COL0];				// (diffuse * base + specular) * attenuation * color
-
-END
-
-#else
-
-/*****************************************************************************/
-/*                                                                           */
-/* ARB fragment program code                                                 */
-/*                                                                           */
-/*****************************************************************************/
-!!ARBfp1.0
-
-TEMP dist, light_dir, camera_dir, normal, base, color, temp, reflect;
-
-DP3 dist.w, fragment.texcoord[1], fragment.texcoord[1];
-MAD_SAT dist.x, dist.w, -fragment.texcoord[1].w, 1.0;				// attenuation
-
-TEX normal, fragment.texcoord[0], texture[1], 2D;
-MAD normal, normal, 2.0, -1.0;										// expand normal
-
-TEX light_dir, fragment.texcoord[1], texture[2], CUBE;				// light direction
-MAD light_dir, light_dir, 2.0, -1.0;
-
-TEX camera_dir, fragment.texcoord[2], texture[2], CUBE;				// camera direction or half angle
-MAD camera_dir, camera_dir, 2.0, -1.0;
-
-#ifdef TEYLOR
-	DP3 temp.x, normal, normal;
-	DP3 temp.y, light_dir, light_dir;
-	DP3 temp.z, camera_dir, camera_dir;
+	//specular
+	vec3 camera_dir = normalize(gl_TexCoord[2].xyz);
 	
-	MAD temp, temp, -0.5, 0.5;
-	
-	MAD normal, normal, temp.x, normal;
-	MAD light_dir, light_dir, temp.y, light_dir;
-	MAD camera_dir, camera_dir, temp.z, camera_dir;
-#endif	/* TEYLOR */
+	gl_FragColor = (dot(light_dir,normal) * base + pow(clamp(dot(reflect(-light_dir,normal),camera_dir),0.0,1.0),16.0) * gloss.w) *
+		attenuation * gl_TexCoord[3];
 
-DP3 color.w, normal, light_dir;
+	gl_FragColor = dot(light_dir, normal) * base * attenuation * gl_TexCoord[3];
 
-TEX base, fragment.texcoord[0], texture[0], 2D;
-MUL color, color.w, base;
-
-#ifdef HALF
-	DP3_SAT color.w, normal, camera_dir;
-	POW_SAT color.w, color.w, {0,0,0,32}.w;
-#else
-	DP3 temp.w, normal, light_dir;
-	MUL temp.w, temp.w, 2.0;
-	MAD reflect, normal, temp.w, -light_dir;
-	DP3_SAT color.w, reflect, camera_dir;
-	POW_SAT color.w, color.w, {0,0,0,16}.w;
-#endif	/* HALF */
-
-MAD color, color.w, base.w, color;
-MUL color, color, dist.x;
-MUL result.color, fragment.color, color;
-
-END
-
-#endif	/* NV3X */
-
-#endif	/* VERTEX */
+}

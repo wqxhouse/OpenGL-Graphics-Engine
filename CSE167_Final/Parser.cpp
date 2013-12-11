@@ -5,10 +5,11 @@ float Parser::variables[26];
 
 /*
  */
-Parser::Parser(const char *name) : data(nullptr) {
-	
+Parser::Parser(const char *name) : data(nullptr) 
+{
 	FILE *file = fopen(name,"r");
-	if(!file) {
+	if(!file) 
+	{
 		fprintf(stderr,"Parse::Parse(): error open \"%s\" file\n",name);
 		return;
 	}

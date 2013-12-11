@@ -59,6 +59,7 @@ public:
 	static int match(const char *mask,const char *name);
 
 	static void render_light();
+	static void render_omni_shadow();
 
 	static bool support_occlusion_;
 	static GLuint o_query_id_;

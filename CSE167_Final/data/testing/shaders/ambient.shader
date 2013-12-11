@@ -1,34 +1,22 @@
-/*	ambient shader
- *
- *			written by Alexander Zaprjagaev
- *			frustum@frustum.org
- *			http://frustum.org
- */
-
 <vertex>
 
-!!ARBvp1.0
+#version 120
+attribute vec3 att_0;
+attribute vec3 att_4;
 
-ATTRIB xyz = vertex.attrib[0];
-ATTRIB st = vertex.attrib[4];
-
-PARAM mvp[4] = { state.matrix.mvp };
-
-DP4 result.position.x, mvp[0], xyz;
-DP4 result.position.y, mvp[1], xyz;
-DP4 result.position.z, mvp[2], xyz;
-DP4 result.position.w, mvp[3], xyz;
-
-MOV result.texcoord, st;
-
-MOV result.color, 0.2;
-
-END
+void main()
+{
+	gl_Position = gl_ModelViewProjectionMatrix * vec4(att_0, 1);
+	gl_TexCoord[0] = vec4(att_4, 1);
+	gl_FrontColor = vec4(0.2, 0.2, 0.2, 1);
+}
 
 <fragment>
+#version 120
 
-!!ARBtec1.0
+uniform sampler2D s_texture_0;
 
-modulate texture primary
-
-END
+void main()
+{
+	gl_FragColor = texture2D(s_texture_0, gl_TexCoord[2].xy) * gl_Color;
+}

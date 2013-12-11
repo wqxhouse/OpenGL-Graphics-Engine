@@ -64,13 +64,11 @@
     <ClInclude Include="Quat.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderConstants.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />
     <ClInclude Include="WorldFile.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{10744AC5-8330-44EF-B580-AB02C4AF0729}</ProjectGuid>

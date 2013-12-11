@@ -22,13 +22,13 @@
     <ClCompile Include="Particles.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="RigidBody.cpp" />
-    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Vector3.cpp" />
     <ClCompile Include="Vector4.cpp" />
     <ClCompile Include="WorldFile.cpp" />
     <ClCompile Include="GLee.c" />
     <ClCompile Include="Quat.cpp" />
+    <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicMath.h" />
@@ -51,15 +51,13 @@
     <ClInclude Include="Particles.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="RigidBody.h" />
-    <ClInclude Include="Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />
     <ClInclude Include="WorldFile.h" />
     <ClInclude Include="GLee.h" />
     <ClInclude Include="Quat.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderConstants.h" />
   </ItemGroup>
 </Project>

@@ -1,27 +1,60 @@
 #pragma once
 
-#include "core.h"
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix4.h"
+#include <map>
+#include "GLee.h"
+#include "Parser.h"
 
-class Shader 
+/*
+*/
+class Vector4;
+class Texture;
+class Shader
 {
 public:
-	
+
+	Shader();
 	Shader(const char *name);
-	~Shader();
-	
-	void load(const char *name);
-	
-	static void setParameter(int num,const Vector4 &parameter);
-	
-	void enable();
-	void disable();
-	void bind();
-	
-	void bindTexture(int unit,Texture *texture);
-	
+	virtual ~Shader();
+
+	// load shaders
+	virtual int loadVertex(const char *src);
+	virtual int loadFragment(const char *src);
+
+	// compile shader
+	virtual int compile();
+
+	// clear shader
+	virtual void clear();
+
+	// find parameter
+	virtual int findParameter(const char *name);
+
+	// set parameter by id
+	virtual void setParameterBool(int location, int value);
+	virtual void setParameterInt(int location, const int *value,int size);
+	virtual void setParameterFloat(int location, const float *value,int size);
+	virtual void setParameterFloatArray(int location, const float *value,int size,int num);
+
+	// set parameter by name
+	virtual void setParameterBool(const char *name,int value);
+	virtual void setParameterInt(const char *name,const int *value,int size);
+	virtual void setParameterFloat(const char *name,const float *value,int size);
+	virtual void setParameterFloatArray(const char *name,const float *value,int size,int num);
+
+	// set shader parameters
+	void bind() ;
+
+
+	// enable / disable shaders
+	void enable() ;
+	void disable() ;
+
+	// get shader
+	GLuint getProgramID() const;
+
+	void bindTexture(int unit, Texture *texture);
+	static Shader *old_shader;
+
 	enum 
 	{
 		NUM_MATRIXES = 4,
@@ -29,65 +62,22 @@ public:
 		NUM_LOCAL_PARAMETERS = 4,
 		NUM_TEXTURES = 6,
 	};
-	
-	static Shader *old_shader;
-	
-protected:
-	
-	enum 
-	{
-		TIME = 1,
-		SIN,
-		COS,
-		CAMERA,
-		ICAMERA,
-		LIGHT,
-		ILIGHT,
-		LIGHT_COLOR,
-		FOG_COLOR,
-		VIEWPORT,
-		PARAMETER,
-		PROJECTION,
-		MODELVIEW,
-		IMODELVIEW,
-		TRANSFORM,
-		ITRANSFORM,
-		LIGHT_TRANSFORM,
-	};
-	
-	struct Matrix 
-	{
-		int num;	// matrix number
-		int type;	// matrix type
-	};
-	
-	struct LocalParameter 
-	{
-		int num;		// parameter number
-		int type;		// parameter type
-		int parameter;
-	};
-	
-	GLuint compileARBtec(const char *src);
-	
-	void getMatrix(const char *name,Matrix *m);
-	void getLocalParameter(const char *name,LocalParameter *p);
-	
-	int num_matrixes;
-	Matrix matrixes[NUM_MATRIXES];
-	
-	int num_vertex_parameters;
-	LocalParameter vertex_parameters[NUM_LOCAL_PARAMETERS];
-	
-	int num_fragment_parameters;
-	LocalParameter fragment_parameters[NUM_LOCAL_PARAMETERS];
-	
-	GLuint vertex_target_;
-	GLuint vertex_id_;
-	GLuint fragment_target_;
-	GLuint fragment_id_;
-	
-	static Vector4 parameters[NUM_PARAMETERS];
-	static Texture *old_textures[Shader::NUM_TEXTURES];
+
+
+private:
+
+	std::map<std::string, int> parameter_names_;	// parameter id by name
+
+	GLuint program_id_;							    // GLSL program id
+
+
+
+	Parser parser_;
+
+	void parseShaderFile(const char *src);
+	void setShaderParameters();
+
+	static Vector4 parameters[2];
+	static Texture *old_textures[6];
 };
 

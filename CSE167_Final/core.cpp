@@ -427,11 +427,22 @@ void Core::Update(float spf)
 	}
 }
 
-/*****************************************************************************/
-/*                                                                           */
-/* renderers                                                                 */
-/*                                                                           */
-/*****************************************************************************/
+
+void Core::render_omni_shadow()
+{
+	// light matrices
+	float zfar = light_shadow_radius;
+	float znear = zfar / 500.0f;
+	mat4 projection = frustum(-znear,znear,-znear,znear,znear,zfar);
+
+	// translucency flag
+	int has_translucent_surfaces = 0;
+
+	// layer positions
+	static const int cube_positions_x[6] = { 1, 1, 2, 0, 0, 2 };
+	static const int cube_positions_y[6] = { 0, 1, 1, 1, 0, 0 };
+
+}
 
 void Core::render_light() 
 {
@@ -626,7 +637,7 @@ void Core::RenderScene(float spf)
 	}
 	
 	// light pass
-	render_light();
+	//render_light();
 	
 	// disable material
 	if(Material::old_material_)
