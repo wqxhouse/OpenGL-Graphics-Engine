@@ -68,10 +68,10 @@ void main()
 	//specular
 	vec3 camera_dir = normalize(gl_TexCoord[2].xyz);
 	
-	//	gl_FragColor = (dot(light_dir,normal) * base + pow(clamp(dot(reflect(-light_dir,normal),camera_dir),0.0,1.0),16.0) * gloss.w) * gl_TexCoord[3] * attenuation;
+	gl_FragColor = (dot(light_dir,normal) * base + pow(clamp(dot(reflect(-light_dir,normal),camera_dir),0.0,1.0),16.0) * gloss.w) * gl_TexCoord[3] * attenuation;
  // gl_FragColor = vec4(dot(light_dir,normal), dot(light_dir,normal) , dot(light_dir,normal), 1);
   
-  gl_FragColor = depth;
+  //gl_FragColor = 
 
 	//gl_FragColor = dot(light_dir, normal) * base * attenuation * gl_TexCoord[3];
   

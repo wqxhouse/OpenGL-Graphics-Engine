@@ -524,7 +524,7 @@ void Core::render_omni_shadow(const Light *light)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	//glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex_);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeDepthTex_);
 
 	glViewport(0, 0, 512, 512); //shadow map size
 	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -684,7 +684,7 @@ void Core::render_light()
 				if((o->pos_.getPosCoord() + o->getCenter() - light_pos_.getVector3()).getLength() < o->getRadius() + l->radius()) 
 				{
 					glActiveTextureARB(GL_TEXTURE5);
-					glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex_);
+					glBindTexture(GL_TEXTURE_CUBE_MAP, cubeDepthTex_);
 					num_triangles_ += o->render();
 					glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 				}

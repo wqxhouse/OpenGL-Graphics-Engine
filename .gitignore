@@ -67,6 +67,7 @@ Packages/
 !3DObjs/*
 !Skybox/*
 !CSE167_Final/data/*
+!externs/*
 
 #Allow NuGet.exe
 !NuGet.exe
