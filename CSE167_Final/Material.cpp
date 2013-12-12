@@ -114,6 +114,7 @@ void Material::load(const char *name)
 					
 					else if(!strcmp(buf,"CLAMP")) flag |= Texture::CLAMP;
 					else if(!strcmp(buf,"CLAMP_TO_EDGE")) flag |= Texture::CLAMP_TO_EDGE;
+					else if(!strcmp(buf, "REPEAT")) flag |= Texture::REPEAT;
 					
 					else if(!strcmp(buf,"NEAREST")) filter = Texture::NEAREST;
 					else if(!strcmp(buf,"LINEAR")) filter = Texture::LINEAR;

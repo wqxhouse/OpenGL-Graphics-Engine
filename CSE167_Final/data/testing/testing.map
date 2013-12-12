@@ -28,13 +28,13 @@ bsp
 light {
 	pos { 6.8 44 5.5 }
 	color 0.7 0.7 0.7 1.0
-	radius 20
+	radius 15
 }
 
 light {
 	pos { -0.1 -0.73 4.0 }
 	color 0.7 0.7 0.7 1.0
-	radius 20
+	radius 15
 }
 
 light {

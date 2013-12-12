@@ -30,7 +30,7 @@ public:
 
 	//Overload operator '-' for subtraction
 	Vector4 operator - (const Vector4 &v);
-
+	inline Vector4 negate() const { return Vector4(-m_x, -m_y, -m_z, -m_w); }
 	float dot(const Vector4 &v) const;
 	float operator * (const Vector4 &v) const;
 	float dotVec3(const Vector3 &v) const;

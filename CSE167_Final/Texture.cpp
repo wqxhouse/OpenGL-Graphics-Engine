@@ -48,6 +48,11 @@ Texture::Texture(int width,int height,GLuint target,int flag) : width(width), he
 		glTexParameteri(target,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
 		glTexParameteri(target,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 		glTexParameteri(target,GL_TEXTURE_WRAP_R,GL_CLAMP_TO_EDGE);
+	} else if(flag & REPEAT)
+	{
+		glTexParameteri(target,GL_TEXTURE_WRAP_S,GL_REPEAT);
+		glTexParameteri(target,GL_TEXTURE_WRAP_T,GL_REPEAT);
+		glTexParameteri(target,GL_TEXTURE_WRAP_R,GL_REPEAT);
 	}
 	if(flag & NEAREST) {
 		glTexParameteri(target,GL_TEXTURE_MAG_FILTER,GL_NEAREST);

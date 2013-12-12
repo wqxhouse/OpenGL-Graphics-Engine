@@ -71,6 +71,7 @@
     <ClInclude Include="WorldFile.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="light.vert" />
     <None Include="omni_shadow.shader" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

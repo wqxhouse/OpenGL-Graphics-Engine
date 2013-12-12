@@ -62,5 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="omni_shadow.shader" />
+    <None Include="light.vert" />
   </ItemGroup>
 </Project>

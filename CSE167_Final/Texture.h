@@ -28,6 +28,7 @@ public:
 		FLOAT = 1 << 4,
 		CLAMP = 1 << 5,
 		CLAMP_TO_EDGE = 1 << 6,
+		REPEAT = 1 << 17,
 
 		// filter
 		NEAREST = 1 << 7,

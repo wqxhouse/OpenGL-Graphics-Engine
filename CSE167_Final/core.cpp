@@ -23,6 +23,8 @@ int Core::win_height_;
 Position Core::camera_(Vector3(0, 0, 0));
 Frustum *Core::frustum_;
 
+bool Core::useShadowBit = false;
+
 BSPTree *Core::bsp_;
 
 std::vector<Object*> Core::objects_;
@@ -80,6 +82,57 @@ std::map<std::string, Shader*>   Core::shaders_;
 std::map<std::string, Texture*>  Core::textures_;
 std::map<std::string, Material*> Core::materials_;
 std::map<std::string, Mesh*>     Core::meshes_;
+
+
+GLuint g_fbo;
+GLuint g_dbgtex;
+
+void Core::genDebugFBO(GLuint *dbgFBO, GLuint tex)
+{
+	GLenum FBOstatus;
+
+	// Try to use a texture depth component
+	glGenTextures(1, &g_dbgtex);
+	glBindTexture(GL_TEXTURE_2D, g_dbgtex);
+
+	// GL_LINEAR does not make sense for depth texture. However, next tutorial shows usage of GL_LINEAR and PCF
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// Remove artefact on the edges of the shadowmap
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+
+	//glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+
+
+
+	// No need to force GL_DEPTH_COMPONENT24, drivers usually give you the max precision if available 
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 512, 512, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// create a framebuffer object
+	glGenFramebuffers(1, &g_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
+
+	// Instruct openGL that we won't bind a color texture with the currently binded FBO
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+
+	// attach the texture to FBO depth attachment point
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,GL_TEXTURE_2D, g_dbgtex, 0);
+
+	// check FBO status
+	FBOstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if(FBOstatus != GL_FRAMEBUFFER_COMPLETE)
+		printf("GL_FRAMEBUFFER_COMPLETE_EXT failed, CANNOT use FBO\n");
+
+	// switch back to window-system-provided framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+
 
 int Core::init(int win_width, int win_height)
 {		
@@ -289,7 +342,9 @@ void Core::LoadScene(const char *name)
 
 	assert(cubeTex_ != -1 && cubeDepthTex_ != -1 && "cube tex failed\n");
 	genCubeFBOs(cubeFBOs_, cubeTex_, cubeDepthTex_);
-}
+
+	genDebugFBO(&g_fbo, g_dbgtex);
+} 
 
 /*
  */
@@ -474,13 +529,13 @@ void Core::set_shadow_matrix_uniform(GLuint shaderProgram, int dir, const Vector
 	{
 	case 0:
 		// +X
-		tmp.setLookAtMat(lightPos, lightPos+Vector3(+1,+0,0), Vector3(0,-1,0));
+		tmp.setLookAtMat(lightPos, lightPos+Vector3(+1,+0,0), Vector3(0,0,-1));
 		view = tmp;
 		mat=  mat.multiplyMat(tmp);
 		break;
 	case 1:
 		// -X
-		tmp.setLookAtMat(lightPos, lightPos+Vector3(-1,+0,0), Vector3(0,-1,0));
+		tmp.setLookAtMat(lightPos, lightPos+Vector3(-1,+0,0), Vector3(0,0,-1));
 		view = tmp;
 		mat=  mat.multiplyMat(tmp);
 		break;
@@ -514,22 +569,118 @@ void Core::set_shadow_matrix_uniform(GLuint shaderProgram, int dir, const Vector
 		return;
 		break;
 	}
+
+	//////////////////////////////////////////////////////////////////////////
+	//switch(dir) 
+	//{
+	//case 0:
+	//	// +X
+	//	tmp.setLookAtMat(lightPos, lightPos+Vector3(+1,+0,0), Vector3(0,-1,0));
+	//	view = tmp;
+	//	mat=  mat.multiplyMat(tmp);
+	//	break;
+	//case 1:
+	//	// -X
+	//	tmp.setLookAtMat(lightPos, lightPos+Vector3(-1,+0,0), Vector3(0,-1,0));
+	//	view = tmp;
+	//	mat=  mat.multiplyMat(tmp);
+	//	break;
+	//case 2:
+	//	// +Y
+	//	tmp.setLookAtMat(lightPos, lightPos+Vector3(0,+1,0), Vector3(0,0,-1));
+	//	view = tmp;
+	//	mat=  mat.multiplyMat(tmp);
+	//	break;
+	//case 3:
+	//	// -Y
+	//	tmp.setLookAtMat(lightPos, lightPos+Vector3(0,-1,0), Vector3(0,0,-1));
+	//	view = tmp;
+	//	mat=  mat.multiplyMat(tmp);
+	//	break;
+	//case 4:
+	//	// +Z
+	//	tmp.setLookAtMat(lightPos, lightPos+Vector3(0,0,+1), Vector3(0,-1,0));
+	//	view = tmp;
+	//	mat=  mat.multiplyMat(tmp);
+	//	break;
+	//case 5:
+	//	// -Z
+	//	// Works
+	//	tmp.setLookAtMat(lightPos, lightPos+Vector3(0,0,-1),Vector3(0,-1,0));
+	//	view = tmp;
+	//	mat=  mat.multiplyMat(tmp);
+	//	break;
+	//default:
+	//	// Not needed
+	//	return;
+	//	break;
+	//}
 	omni_shadow_shader_->setParameterFloat("cameraToShadowView", view.getPointer(), 16);
 	omni_shadow_shader_->setParameterFloat("cameraToShadowProjector", mat.getPointer(), 16);
 }
 
-
 void Core::render_omni_shadow(const Light *light)
 {
+	//glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_CULL_FACE);
+	////glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	////glActiveTextureARB(GL_TEXTURE0);
+	////glBindTexture(GL_TEXTURE_2D, g_dbgtex);
+
+	//
+	////glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//omni_shadow_shader_->enable();
+	//omni_shadow_shader_->bind();
+
+
+	//	glBindFramebuffer(GL_FRAMEBUFFER, g_fbo);
+	//	glViewport(0, 0, 512, 512); //shadow map size
+
+	//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//	set_shadow_matrix_uniform(omni_shadow_shader_->getProgramID(), 5, light->pos());
+
+	//	//draw visible objects
+	//	for(int i = 0; i < BSPTree::visible_sectors_.size(); i++) 
+	//	{
+	//		Sector *s = BSPTree::visible_sectors_[i];
+	//		Portal *p = (s->frame_ == Core::curr_frame_) ? s->portal_ : nullptr;
+	//		
+	//		for(int j = 0; j < s->visible_objects_.size(); j++) 
+	//		{
+	//			Object *o = s->visible_objects_[j];
+	//			if((o->pos_.getPosCoord() + o->getCenter() - light_pos_.getVector3()).getLength() < o->getRadius() + light->radius()) 
+	//			{
+	//				num_triangles_ += o->render(-1, true);
+	//			}
+	//		}
+	//	}
+
+	//// Reset
+	//omni_shadow_shader_->disable();
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
+	//glViewport(0, 0, win_width_, win_height_);
+	////glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	///*glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_CULL_FACE);*/
+
+	//////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	//glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeDepthTex_);
+	//glActiveTextureARB(GL_TEXTURE7);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, cubeDepthTex_);
 
 	glViewport(0, 0, 512, 512); //shadow map size
 	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	omni_shadow_shader_->enable();
 	omni_shadow_shader_->bind();
 
@@ -549,6 +700,7 @@ void Core::render_omni_shadow(const Light *light)
 			for(int j = 0; j < s->visible_objects_.size(); j++) 
 			{
 				Object *o = s->visible_objects_[j];
+
 				if((o->pos_.getPosCoord() + o->getCenter() - light_pos_.getVector3()).getLength() < o->getRadius() + light->radius()) 
 				{
 					num_triangles_ += o->render(-1, true);
@@ -560,16 +712,16 @@ void Core::render_omni_shadow(const Light *light)
 	// Reset
 	omni_shadow_shader_->disable();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	glViewport(0, 0, win_width_, win_height_);
 	//glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	/*glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);*/
 }
 
+
 void Core::render_light() 
 {
-	glDepthMask(GL_FALSE);
 	
 	if(support_occlusion_) 
 	{
@@ -605,7 +757,7 @@ void Core::render_light()
 				glScalef(l->radius(), l->radius(), l->radius());
 
 				glBeginQueryARB(GL_SAMPLES_PASSED_ARB, o_query_id_);
-				glutWireSphere(1.0f, 16, 8);
+				glutSolidSphere(1.0f, 16, 8);
 				glEndQueryARB(GL_SAMPLES_PASSED_ARB);
 				glPopMatrix();
 				
@@ -623,11 +775,6 @@ void Core::render_light()
 	{
 		glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
 		glEnable(GL_CULL_FACE);
-	}
-	
-	for(int i = 0; i < lights_.size(); i++)
-	{
-		visible_lights_.push_back(lights_[i]);
 	}
 
 	if(scissor_test_) glEnable(GL_SCISSOR_TEST);
@@ -649,7 +796,33 @@ void Core::render_light()
 		
 		//////////////////////////////////////////////////////////////////////////
 		//depth pass
-		render_omni_shadow(l);
+		if(useShadowBit)
+		{
+			render_omni_shadow(l);
+		}
+		
+		//display debug texture
+	/*		glUseProgramObjectARB(0);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(-win_width_/2,win_width_/2,-win_height_/2,win_height_/2,1,20);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glColor4f(1,1,1,1);
+		glActiveTextureARB(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, g_dbgtex);
+		glEnable(GL_TEXTURE_2D);
+		glTranslated(0,0,-1);
+		glBegin(GL_QUADS);
+		glTexCoord2d(0,0);glVertex3f(0,0,0);
+		glTexCoord2d(1,0);glVertex3f(win_width_/2,0,0);
+		glTexCoord2d(1,1);glVertex3f(win_width_/2,win_height_/2,0);
+		glTexCoord2d(0,1);glVertex3f(0,win_height_/2,0);
+
+
+		glEnd();
+		glDisable(GL_TEXTURE_2D);*/
+
 		
 		//////////////////////////////////////////////////////////////////////////
 		//normal pass
@@ -675,18 +848,27 @@ void Core::render_light()
 				portal_scissor[3] -= portal_scissor[1];
 				if(portal_scissor[2] < 0 || portal_scissor[3] < 0) continue;
 				if(scissor_test_) glScissor(portal_scissor[0],portal_scissor[1],portal_scissor[2],portal_scissor[3]);
-			} else {
+			} else { 
 				if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
 			}
 			for(int j = 0; j < s->visible_objects_.size(); j++) 
 			{
 				Object *o = s->visible_objects_[j];
+
 				if((o->pos_.getPosCoord() + o->getCenter() - light_pos_.getVector3()).getLength() < o->getRadius() + l->radius()) 
 				{
-					glActiveTextureARB(GL_TEXTURE5);
-					glBindTexture(GL_TEXTURE_CUBE_MAP, cubeDepthTex_);
-					num_triangles_ += o->render();
-					glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+					if(useShadowBit)
+					{
+						glActiveTextureARB(GL_TEXTURE7);
+						glBindTexture(GL_TEXTURE_CUBE_MAP, cubeDepthTex_);
+
+						num_triangles_ += o->render();
+						glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+					}
+					else
+					{
+						num_triangles_ += o->render();
+					}
 				}
 			}
 		}
@@ -708,7 +890,6 @@ void Core::render_light()
 		glDisable(GL_SCISSOR_TEST);
 	}
 	
-	glDepthMask(GL_TRUE);
 }
 
 /*

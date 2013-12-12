@@ -63,6 +63,9 @@ public:
 	static void genCubeFBOs(GLuint *cubeFBOs, GLuint cubeTex, GLuint cubeDepthTex);
 	static void set_shadow_matrix_uniform(GLuint shaderProgram, int dir, const Vector3 &lightPos);
 
+
+	static void genDebugFBO(GLuint *dbgFBO, GLuint tex);
+
 	static bool support_occlusion_;
 	static GLuint o_query_id_;
 
@@ -130,4 +133,6 @@ public:
 	static GLuint currentSideTex_;
 	static GLuint currentSideDepthTex_;
 	static GLuint toCurrentSideFBO_;
+	static bool useShadowBit;
+
 };

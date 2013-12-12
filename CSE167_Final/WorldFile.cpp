@@ -47,7 +47,7 @@ void WorldFile::load(const char *name)
 		while(*data) {
 			const char *token = read_token();
 			if(!token || !*token) break;
-			else if(!strcmp(token,"bsp")) load_bsp();
+			else if(!strcmp(token,"world")) load_bsp();
 			else if(!strcmp(token,"light")) load_light();
 			//else if(!strcmp(token,"fog")) load_fog();
 			//else if(!strcmp(token,"mirror")) load_mirror();

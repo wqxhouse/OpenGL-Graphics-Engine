@@ -80,13 +80,13 @@ static void initCore()
 	glutSetCursor(GLUT_CURSOR_NONE); 
 
 	Core::AddDirectoryPath(
-		"data/testing/");
+		"data/scene/");
 
 	p_collision = new Collision();
 	int isInit = Core::init(win_x, win_y);
 	assert(isInit && "Core::init failed()");
 
-	Core::LoadScene("testing.map");
+	Core::LoadScene("scene.map");
 	printf("Scene Load Completed...\n");
 
 }
@@ -159,6 +159,10 @@ static void idle()
 			phi = 89;
 		}
 	}
+	if(keyStates[(int)'l'])
+	{
+		Core::useShadowBit = Core::useShadowBit ? false : true;
+	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// Handle gun fire ///////////////////////////////////////////////////////
@@ -199,12 +203,13 @@ static void idle()
 		view_pos.print();
 		cc = 0;
 	}
-	/*for(int i = 0; i < 4; i++) {
-	collide->collide(NULL,camera + (x * speed.x + y * speed.y + z * speed.z) * ifps / 4.0f,0.25);
-	for(int j = 0; j < collide->num_contacts; j++) {
-	camera += collide->contacts[j].normal * collide->contacts[j].depth / (float)collide->num_contacts;
+	for(int i = 0; i < 4; i++) {
+		p_collision->collide(nullptr, view_pos + (x.scale(speed['x']) + y.scale(speed['y']) + z.scale(speed['z'])).scale(spf).scale( 1.0f /4.0f), 0.25);
+		for(int j = 0; j < p_collision->num_contacts; j++) 
+		{
+			view_pos = view_pos + p_collision->contacts[j].normal.scale( p_collision->contacts[j].depth ).scale( (float)p_collision->num_contacts );
+		}
 	}
-	}*/
 
 	modelview.setLookAtMat(view_pos, view_pos + direction, Vector3(0,0,1));
 	projection.setPerspectiveMat(89, (float)win_x / (float)win_y, 0.1, 500);
