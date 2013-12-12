@@ -13,7 +13,7 @@ public:
 	explicit OGeometry(const char *filename);
 	virtual ~OGeometry(void);
 
-	virtual int render(int surface_id = -1);
+	virtual int render(int surface_id = -1, int shadow = -1);
 
 	virtual int getIntersection(
 		const Vector3 &l0,

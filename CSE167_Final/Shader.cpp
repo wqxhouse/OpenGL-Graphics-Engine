@@ -337,12 +337,12 @@ void Shader::setShaderParameters()
 {
 	setParameterFloat(SHADER_PROJECTION, Core::projection_.getPointer(), 16);
 	setParameterFloat(SHADER_MODELVIEW, Core::modelview_.getPointer(), 16);
-	setParameterFloat(SHADER_IMODELVIEW, Core::transform_.getPointer(), 16);
+	setParameterFloat(SHADER_IMODELVIEW, Core::imodelview_.getPointer(), 16);
 	setParameterFloat(SHADER_TRANSFORM, Core::transform_.getPointer(), 16);
 	setParameterFloat(SHADER_ITRANSFORM, Core::itransform_.getPointer(), 16);
 
-	setParameterFloat(SHADER_CAMERA_POSITION,Core::light_pos_.getPointer(), 4);
-	setParameterFloat(SHADER_CAMERA_INVERSE, Vector4(Core::itransform_.multiplyVec3(Core::camera_.getPosCoord()), 1).getPointer(), 16);
+	setParameterFloat(SHADER_CAMERA_POSITION,Core::camera_.getPosCoord().getPointer(), 3);
+	setParameterFloat(SHADER_CAMERA_INVERSE, Vector4(Core::itransform_.multiplyVec3(Core::camera_.getPosCoord()), 1).getPointer(), 4);
 	//setParameterFloat(SHADER_CAMERA_DIRECTION, Core::direction_, 3);
 
 	//lights
@@ -353,14 +353,14 @@ void Shader::setShaderParameters()
 
 	if(Core::curr_light_ != nullptr)
 	{
-		setParameterFloat(SHADER_LIGHT_IRADIUS, Vector4(1.0f / Core::curr_light_->radius(),
-			1.0f / Core::curr_light_->radius(),
-			1.0f / Core::curr_light_->radius(),
-			1).getPointer(), 4);
+		float iradius = (1.0f / Core::curr_light_->radius());
+		setParameterFloat(SHADER_LIGHT_IRADIUS, &iradius, 1);
 	}
-	
 	// light transformation
-	setParameterFloat(SHADER_LIGHT_TRANSFORM, Core::curr_light_->transform_.getPointer(), 16);
+	if(Core::curr_light_ != nullptr)
+	{
+		setParameterFloat(SHADER_LIGHT_TRANSFORM, Core::curr_light_->transform_.getPointer(), 16);
+	}
 
 	//shadow parameters
 	/*setParameterFloat(SHADER_LIGHT_SHADOW_OFFSET,light_shadow_offset,3);

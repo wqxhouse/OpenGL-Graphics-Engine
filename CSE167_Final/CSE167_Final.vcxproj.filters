@@ -60,4 +60,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderConstants.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="omni_shadow.shader" />
+  </ItemGroup>
 </Project>

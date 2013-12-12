@@ -294,7 +294,7 @@ void WorldFile::load_mesh()
 		{
 			mesh = new OGeometry(read_string());
 		}
-	//	else if(!strcmp(token,"shadows")) shadows = read_bool();
+		else if(!strcmp(token,"shadows")) shadows = read_bool();
 		else if(mesh && !strcmp(token,"material")) {
 			const char *name = read_string();
 			mesh->bindMaterial(name,Core::LoadMaterial(read_string()));

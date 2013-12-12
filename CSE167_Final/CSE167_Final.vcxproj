@@ -70,6 +70,9 @@
     <ClInclude Include="Vector4.h" />
     <ClInclude Include="WorldFile.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="omni_shadow.shader" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{10744AC5-8330-44EF-B580-AB02C4AF0729}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

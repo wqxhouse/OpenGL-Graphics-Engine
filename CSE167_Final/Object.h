@@ -29,7 +29,7 @@ public:
 
 	int bindMaterial(const char *name, Material *material);
 
-	virtual int render(int surface_id = -1) = 0;
+	virtual int render(int surface_id = -1, int shadow = -1) = 0;
 	virtual int getIntersection(const Vector3 &l0,
 		const Vector3 &l1, 
 		Vector3 *point,

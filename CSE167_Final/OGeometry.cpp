@@ -31,7 +31,7 @@ OGeometry::OGeometry(const char *filename)
 
 /*
  */
-int OGeometry::render(int surface_id) 
+int OGeometry::render(int surface_id, int shadow /*= -1*/) 
 {
 	int num_triangles = 0;
 	enable();
@@ -88,19 +88,29 @@ int OGeometry::render(int surface_id)
 	//printf(" \n");
 
 	//render
-	for(int i = 0; i < getNumSurfaces(); i++) 
+	if(shadow == -1)
 	{
-		if(frames_[i] != Core::curr_frame_)
+		for(int i = 0; i < getNumSurfaces(); i++) 
 		{
-			continue;
+			if(frames_[i] != Core::curr_frame_)
+			{
+				continue;
+			}
+			if(!materials_[i]->enable())
+			{
+				continue;
+			}
+			materials_[i]->bind();
+			num_triangles += mesh_->render(true ,i);
+
 		}
-		if(!materials_[i]->enable())
+	}
+	else if(shadow == 1)
+	{
+		for(int i = 0; i < getNumSurfaces(); i++) 
 		{
-			continue;
+			num_triangles += mesh_->render(true ,i);
 		}
-		materials_[i]->bind();
-		num_triangles += mesh_->render(true ,i);
-	
 	}
 	
 	disable();

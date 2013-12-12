@@ -76,6 +76,10 @@ public:
 	static unsigned char *load_3d(const char *name,int &width,int &height,int &depth,int &format);
 	static int save_3d(const char *name,const unsigned char *data,int width,int height,int depth,int format);
 
+
+	static GLuint genCubeTexture(GLuint size);
+	static GLuint genCubeDepthTexture(GLuint size);
+
 	int width,height,depth;
 	GLuint target;
 	int flag;

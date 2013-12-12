@@ -49,8 +49,18 @@ Matrix4 Core::imodelview_;
 Matrix4 Core::transform_;
 Matrix4 Core::itransform_;
 
+//post
 Texture *Core::texture_;
 Material *Core::material_;
+
+//shadow maps
+Shader *Core::omni_shadow_shader_;
+GLuint Core::cubeTex_;
+GLuint Core::cubeDepthTex_;
+GLuint Core::cubeFBOs_[6];
+GLuint Core::currentSideTex_;
+GLuint Core::currentSideDepthTex_;
+GLuint Core::toCurrentSideFBO_;
 
 //second per frame
 float Core::spf_;
@@ -270,6 +280,15 @@ void Core::LoadScene(const char *name)
 
 	/*texture_  = new Texture(win_width_, win_height_, Texture::TEXTURE_2D,Texture::RGB | Texture::CLAMP | Texture::LINEAR);
 	material_ = LoadMaterial("screen.mat");*/
+
+	//load shadow map shader
+	omni_shadow_shader_ = LoadShader("omni_shadow.shader");
+
+	cubeTex_ = Texture::genCubeTexture(512);
+	cubeDepthTex_ = Texture::genCubeDepthTexture(512);
+
+	assert(cubeTex_ != -1 && cubeDepthTex_ != -1 && "cube tex failed\n");
+	genCubeFBOs(cubeFBOs_, cubeTex_, cubeDepthTex_);
 }
 
 /*
@@ -323,6 +342,23 @@ Mesh *Core::LoadGeometry(const char *name)
 		return mesh;
 	}
 	return it->second;
+}
+
+void Core::genCubeFBOs(GLuint *cubeFBOs, GLuint cubeTex, GLuint cubeDepthTex)
+{
+	glGenFramebuffersEXT(6, cubeFBOs);
+	for(int i=0; i<6; i++) 
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER, cubeFBOs[i]);
+		glFramebufferTexture2DEXT (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, cubeTex, 0);
+		glFramebufferTexture2DEXT (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, cubeDepthTex, 0);
+		GLenum result = glCheckFramebufferStatus (GL_FRAMEBUFFER);
+		if (GL_FRAMEBUFFER_COMPLETE != result) 
+		{
+			printf ("ERROR: Framebuffer is not complete.\n");
+		}
+	}
+	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -420,97 +456,183 @@ void Core::Update(float spf)
 			{
 				continue;
 			}
-
+			 
 			o->update(spf);
 			o->frame_ = -Core::curr_frame_;
 		}
 	}
 }
 
-
-void Core::render_omni_shadow()
+void Core::set_shadow_matrix_uniform(GLuint shaderProgram, int dir, const Vector3 &lightPos)
 {
-	// light matrices
-	float zfar = light_shadow_radius;
-	float znear = zfar / 500.0f;
-	mat4 projection = frustum(-znear,znear,-znear,znear,znear,zfar);
+	Matrix4 mat, view, tmp;
 
-	// translucency flag
-	int has_translucent_surfaces = 0;
+	Matrix4 tmpPersp;
+	tmpPersp.setPerspectiveMat(90.0f, 1.0f, 0.5f, 100.0f);
+	mat = mat.multiplyMat( tmpPersp);
+	switch(dir) 
+	{
+	case 0:
+		// +X
+		tmp.setLookAtMat(lightPos, lightPos+Vector3(+1,+0,0), Vector3(0,-1,0));
+		view = tmp;
+		mat=  mat.multiplyMat(tmp);
+		break;
+	case 1:
+		// -X
+		tmp.setLookAtMat(lightPos, lightPos+Vector3(-1,+0,0), Vector3(0,-1,0));
+		view = tmp;
+		mat=  mat.multiplyMat(tmp);
+		break;
+	case 2:
+		// +Y
+		tmp.setLookAtMat(lightPos, lightPos+Vector3(0,+1,0), Vector3(0,0,-1));
+		view = tmp;
+		mat=  mat.multiplyMat(tmp);
+		break;
+	case 3:
+		// -Y
+		tmp.setLookAtMat(lightPos, lightPos+Vector3(0,-1,0), Vector3(0,0,-1));
+		view = tmp;
+		mat=  mat.multiplyMat(tmp);
+		break;
+	case 4:
+		// +Z
+		tmp.setLookAtMat(lightPos, lightPos+Vector3(0,0,+1), Vector3(0,-1,0));
+		view = tmp;
+		mat=  mat.multiplyMat(tmp);
+		break;
+	case 5:
+		// -Z
+		// Works
+		tmp.setLookAtMat(lightPos, lightPos+Vector3(0,0,-1),Vector3(0,-1,0));
+		view = tmp;
+		mat=  mat.multiplyMat(tmp);
+		break;
+	default:
+		// Not needed
+		return;
+		break;
+	}
+	omni_shadow_shader_->setParameterFloat("cameraToShadowView", view.getPointer(), 16);
+	omni_shadow_shader_->setParameterFloat("cameraToShadowProjector", mat.getPointer(), 16);
+}
 
-	// layer positions
-	static const int cube_positions_x[6] = { 1, 1, 2, 0, 0, 2 };
-	static const int cube_positions_y[6] = { 0, 1, 1, 1, 0, 0 };
 
+void Core::render_omni_shadow(const Light *light)
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	//glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex_);
+
+	glViewport(0, 0, 512, 512); //shadow map size
+	//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	omni_shadow_shader_->enable();
+	omni_shadow_shader_->bind();
+
+	for(int i=0; i<6; ++i) 
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, cubeFBOs_[i]);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		set_shadow_matrix_uniform(omni_shadow_shader_->getProgramID(),i, light->pos());
+
+		//draw visible objects
+		for(int i = 0; i < BSPTree::visible_sectors_.size(); i++) 
+		{
+			Sector *s = BSPTree::visible_sectors_[i];
+			Portal *p = (s->frame_ == Core::curr_frame_) ? s->portal_ : nullptr;
+			
+			for(int j = 0; j < s->visible_objects_.size(); j++) 
+			{
+				Object *o = s->visible_objects_[j];
+				if((o->pos_.getPosCoord() + o->getCenter() - light_pos_.getVector3()).getLength() < o->getRadius() + light->radius()) 
+				{
+					num_triangles_ += o->render(-1, true);
+				}
+			}
+		}
+	}
+
+	// Reset
+	omni_shadow_shader_->disable();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glViewport(0, 0, win_width_, win_height_);
+	//glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	/*glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);*/
 }
 
 void Core::render_light() 
 {
 	glDepthMask(GL_FALSE);
 	
-	//if(support_occlusion_) 
-	//{
-	//	glDisable(GL_CULL_FACE);
-	//	glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
-	//}
-	//
-	//// find visible lights
-	//for(int i = 0; i < lights_.size(); i++) 
-	//{
-	//	Light *l = lights_[i];
+	if(support_occlusion_) 
+	{
+		glDisable(GL_CULL_FACE);
+		glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
+	}
+	
+	// find visible lights
+	for(int i = 0; i < lights_.size(); i++) 
+	{
+		Light *l = lights_[i];
 
-	//	for(int j = 0; j < l->pos_.sectors_.size(); j++) 
-	//	{
-	//		if(BSPTree::sectors_[l->pos_.sectors_[j]].frame_ != curr_frame_)
-	//		{
-	//			continue;
-	//		}
-	//		
-	//		if(frustum_->inside(l->pos(), l->radius()) == 0)
-	//		{
-	//			continue;
-	//		}
-	//		
-	//		if(support_occlusion_ && (l->pos() - camera_.getPosCoord()).getLength() > l->radius()) 
-	//		{
-	//			glPushMatrix();
-	//			glTranslatef(
-	//				l->pos_.getPosCoord()['x'], 
-	//				l->pos_.getPosCoord()['y'], 
-	//				l->pos_.getPosCoord()['z']);
+		for(int j = 0; j < l->pos_.sectors_.size(); j++) 
+		{
+			if(BSPTree::sectors_[l->pos_.sectors_[j]].frame_ != curr_frame_)
+			{
+				continue;
+			}
+			
+			if(frustum_->inside(l->pos(), l->radius()) == 0)
+			{
+				continue;
+			}
+			
+			if(support_occlusion_ && (l->pos() - camera_.getPosCoord()).getLength() > l->radius()) 
+			{
+				glPushMatrix();
+				glTranslatef(
+					l->pos_.getPosCoord()['x'], 
+					l->pos_.getPosCoord()['y'], 
+					l->pos_.getPosCoord()['z']);
 
-	//			glScalef(l->radius(), l->radius(), l->radius());
+				glScalef(l->radius(), l->radius(), l->radius());
 
-	//			glBeginQueryARB(GL_SAMPLES_PASSED_ARB, o_query_id_);
-	//			glutWireSphere(1.0f, 16, 8);
-	//			glEndQueryARB(GL_SAMPLES_PASSED_ARB);
-	//			glPopMatrix();
-	//			
-	//			GLuint samples;
-	//			glGetQueryObjectuivARB(o_query_id_, GL_QUERY_RESULT_ARB, &samples);
-	//			printf("samples: %d\n", samples);
+				glBeginQueryARB(GL_SAMPLES_PASSED_ARB, o_query_id_);
+				glutWireSphere(1.0f, 16, 8);
+				glEndQueryARB(GL_SAMPLES_PASSED_ARB);
+				glPopMatrix();
+				
+				GLuint samples;
+				glGetQueryObjectuivARB(o_query_id_, GL_QUERY_RESULT_ARB, &samples);
+				//printf("samples: %d\n", samples);
 
-	//			if(samples == 0) continue;
-	//		}
-	//		visible_lights_.push_back(l);
-	//		break;
-	//	}
-	//}
-	//if(support_occlusion_) 
-	//{
-	//	glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
-	//	glEnable(GL_CULL_FACE);
-	//}
-	//
+				if(samples == 0) continue;
+			}
+			visible_lights_.push_back(l);
+			break;
+		}
+	}
+	if(support_occlusion_) 
+	{
+		glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE);
+		glEnable(GL_CULL_FACE);
+	}
+	
 	for(int i = 0; i < lights_.size(); i++)
 	{
 		visible_lights_.push_back(lights_[i]);
 	}
 
-	//if(scissor_test_) glEnable(GL_SCISSOR_TEST);
+	if(scissor_test_) glEnable(GL_SCISSOR_TEST);
 	
-	//if(shadow) glEnable(GL_STENCIL_TEST);
-	
+	//////////////////////////////////////////////////////////////////////////
 	// render lights
 	for(int i = 0; i < visible_lights_.size(); i++) 
 	{
@@ -519,14 +641,18 @@ void Core::render_light()
 		
 		light_pos_ = Vector4(l->pos_.getPosCoord(), 1.0 / (l->radius() * l->radius()));
 		light_color_ = l->color_;
-		
-		int stencil_value = 0;
-		
+
 		// scissor
 		int scissor[4];
 		l->getScissor(scissor);
-		//if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
+		if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
 		
+		//////////////////////////////////////////////////////////////////////////
+		//depth pass
+		render_omni_shadow(l);
+		
+		//////////////////////////////////////////////////////////////////////////
+		//normal pass
 		glDepthFunc(GL_EQUAL);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE,GL_ONE);
@@ -535,35 +661,37 @@ void Core::render_light()
 		{
 			Sector *s = BSPTree::visible_sectors_[i];
 			Portal *p = (s->frame_ == Core::curr_frame_) ? s->portal_ : nullptr;
-			//if(p) 
-			//{
-			//	int portal_scissor[4];
-			//	p->getScissor(portal_scissor);
-			//	portal_scissor[2] += portal_scissor[0];
-			//	portal_scissor[3] += portal_scissor[1];
-			//	if(portal_scissor[0] < scissor[0]) portal_scissor[0] = scissor[0];
-			//	if(portal_scissor[1] < scissor[1]) portal_scissor[1] = scissor[1];
-			//	if(portal_scissor[2] > scissor[0] + scissor[2]) portal_scissor[2] = scissor[0] + scissor[2];
-			//	if(portal_scissor[3] > scissor[1] + scissor[3]) portal_scissor[3] = scissor[1] + scissor[3];
-			//	portal_scissor[2] -= portal_scissor[0];
-			//	portal_scissor[3] -= portal_scissor[1];
-			//	if(portal_scissor[2] < 0 || portal_scissor[3] < 0) continue;
-			//	//if(scissor_test_) glScissor(portal_scissor[0],portal_scissor[1],portal_scissor[2],portal_scissor[3]);
-			//} else {
-			//	//if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
-			//}
+			if(p) 
+			{
+				int portal_scissor[4];
+				p->getScissor(portal_scissor);
+				portal_scissor[2] += portal_scissor[0];
+				portal_scissor[3] += portal_scissor[1];
+				if(portal_scissor[0] < scissor[0]) portal_scissor[0] = scissor[0];
+				if(portal_scissor[1] < scissor[1]) portal_scissor[1] = scissor[1];
+				if(portal_scissor[2] > scissor[0] + scissor[2]) portal_scissor[2] = scissor[0] + scissor[2];
+				if(portal_scissor[3] > scissor[1] + scissor[3]) portal_scissor[3] = scissor[1] + scissor[3];
+				portal_scissor[2] -= portal_scissor[0];
+				portal_scissor[3] -= portal_scissor[1];
+				if(portal_scissor[2] < 0 || portal_scissor[3] < 0) continue;
+				if(scissor_test_) glScissor(portal_scissor[0],portal_scissor[1],portal_scissor[2],portal_scissor[3]);
+			} else {
+				if(scissor_test_) glScissor(scissor[0],scissor[1],scissor[2],scissor[3]);
+			}
 			for(int j = 0; j < s->visible_objects_.size(); j++) 
 			{
-
 				Object *o = s->visible_objects_[j];
 				if((o->pos_.getPosCoord() + o->getCenter() - light_pos_.getVector3()).getLength() < o->getRadius() + l->radius()) 
 				{
+					glActiveTextureARB(GL_TEXTURE5);
+					glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex_);
 					num_triangles_ += o->render();
+					glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 				}
 			}
 		}
 		
-		//if(scissor_test_) glScissor(viewport_[0],viewport_[1],viewport_[2],viewport_[3]);
+		if(scissor_test_) glScissor(viewport_[0],viewport_[1],viewport_[2],viewport_[3]);
 	
 		// disable material
 		if(Material::old_material_) Material::old_material_->disable();
@@ -571,19 +699,14 @@ void Core::render_light()
 		glDisable(GL_BLEND);
 		glDepthFunc(GL_LEQUAL);
 		
-		// clear stensil only if it is needed
-		/*if(l != visible_lights_[visible_lights_.size() - 1])
-		{
-		glClear(GL_STENCIL_BUFFER_BIT);		
-		}*/
 	}
 	curr_light_ = nullptr;
 	
-	/*if(scissor_test_) 
+	if(scissor_test_) 
 	{
 		glScissor(viewport_[0],viewport_[1],viewport_[2],viewport_[3]);
 		glDisable(GL_SCISSOR_TEST);
-	}*/
+	}
 	
 	glDepthMask(GL_TRUE);
 }
@@ -637,7 +760,7 @@ void Core::RenderScene(float spf)
 	}
 	
 	// light pass
-	//render_light();
+	render_light();
 	
 	// disable material
 	if(Material::old_material_)

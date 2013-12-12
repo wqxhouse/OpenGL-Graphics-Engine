@@ -59,7 +59,9 @@ public:
 	static int match(const char *mask,const char *name);
 
 	static void render_light();
-	static void render_omni_shadow();
+	static void render_omni_shadow(const Light *light);
+	static void genCubeFBOs(GLuint *cubeFBOs, GLuint cubeTex, GLuint cubeDepthTex);
+	static void set_shadow_matrix_uniform(GLuint shaderProgram, int dir, const Vector3 &lightPos);
 
 	static bool support_occlusion_;
 	static GLuint o_query_id_;
@@ -119,4 +121,13 @@ public:
 	static std::map<std::string, Mesh*>     meshes_;
 
 	static std::vector<char*> defines_;
+
+	//shadow maps
+	static Shader *omni_shadow_shader_;
+	static GLuint cubeTex_;
+	static GLuint cubeDepthTex_;
+	static GLuint cubeFBOs_[6];
+	static GLuint currentSideTex_;
+	static GLuint currentSideDepthTex_;
+	static GLuint toCurrentSideFBO_;
 };

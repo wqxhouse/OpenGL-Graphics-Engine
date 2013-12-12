@@ -65,7 +65,6 @@ int Object::bindMaterial(const char *name, Material *material)
 	{
 		if(Core::match(name,getSurfaceName(i))) 
 		{
-			int j;
 			materials_[i] = material;
 			bind = 1;
 		}

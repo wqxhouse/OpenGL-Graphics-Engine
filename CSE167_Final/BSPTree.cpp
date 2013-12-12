@@ -322,7 +322,7 @@ Portal::Portal()
 
 Portal::~Portal() 
 {
-	sectors_.clear();
+	//sectors_.clear();
 }
 
 /*
