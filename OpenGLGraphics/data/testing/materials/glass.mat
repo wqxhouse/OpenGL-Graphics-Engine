@@ -1,0 +1,6 @@
+<texture0>			ceiling_windows_d.dds		RGBA
+<texture1>			ceiling_windows_n.dds
+<texture2>			normalize_%s.png	CUBE	CLAMP_TO_EDGE
+
+<ambient_shader>	ambient_emis.shader
+<light_shader>		light_dsg.shader

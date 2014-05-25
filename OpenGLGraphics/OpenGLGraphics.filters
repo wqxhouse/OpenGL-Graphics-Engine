@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="BasicMath.cpp" />
+    <ClCompile Include="Bounds.cpp" />
+    <ClCompile Include="BSPTree.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Collision.cpp" />
+    <ClCompile Include="core.cpp" />
+    <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="Light.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Matrix4.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshFile.cpp" />
+    <ClCompile Include="MeshVBO.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="ObjectViewer.cpp" />
+    <ClCompile Include="OGeometry.cpp" />
+    <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="Particles.cpp" />
+    <ClCompile Include="Position.cpp" />
+    <ClCompile Include="RigidBody.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Vector3.cpp" />
+    <ClCompile Include="Vector4.cpp" />
+    <ClCompile Include="WorldFile.cpp" />
+    <ClCompile Include="GLee.c" />
+    <ClCompile Include="Quat.cpp" />
+    <ClCompile Include="Shader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BasicMath.h" />
+    <ClInclude Include="Bounds.h" />
+    <ClInclude Include="BSPTree.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Collision.h" />
+    <ClInclude Include="core.h" />
+    <ClInclude Include="Frustum.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Matrix4.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshFileObj.h" />
+    <ClInclude Include="MeshVBO.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="ObjectViewer.h" />
+    <ClInclude Include="OGeometry.h" />
+    <ClInclude Include="Parser.h" />
+    <ClInclude Include="Particles.h" />
+    <ClInclude Include="Position.h" />
+    <ClInclude Include="RigidBody.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Vector3.h" />
+    <ClInclude Include="Vector4.h" />
+    <ClInclude Include="WorldFile.h" />
+    <ClInclude Include="GLee.h" />
+    <ClInclude Include="Quat.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderConstants.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="omni_shadow.shader" />
+    <None Include="light.vert" />
+  </ItemGroup>
+</Project>

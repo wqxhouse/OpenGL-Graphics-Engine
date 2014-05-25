@@ -1,0 +1,51 @@
+<path>
+data/scene/,
+data/scene/meshes/,
+data/scene/textures/,
+data/scene/textures/cube,
+data/scene/materials/,
+data/scene/shaders/
+
+
+<data>
+world 
+{
+	mesh					scene.obj
+	
+	material	*									default.mat
+	
+	material    sky									sky.mat
+	
+	
+	material	floor_*								floor_0.mat
+	material	floor_00|floor_01*|floor_02			floor_1.mat
+	material	ceiling_*							ceiling_0.mat
+	material	ceiling_10|ceiling_11|ceiling_12	ceiling_1.mat
+	material	ceiling_13|ceiling_15|ceiling_16	ceiling_1.mat
+	material	room_*								wall.mat
+	
+	material    island1_lod1						terrian.mat
+	material    outside_block_*						blocks.mat
+	material    outside_bajiaotree_top_*            tree_top.mat
+	material    outsdie_bajiaotree_bottom_*         tree_bottom.mat
+	material    trucks_*							trucks.mat
+	material    outside_stones_*					stones.mat
+	material    Oiltank_OilTank*					oiltank.mat
+	
+}
+
+
+light 
+{
+	pos { 55 8 40 }
+	color 0.7 0.7 0.7 1.0
+	radius 100
+}
+
+
+light
+{
+	pos { -3.05, -5.43, -4.032 }
+	color 1.0 0.4 0.7 1.0
+	radius 13
+}

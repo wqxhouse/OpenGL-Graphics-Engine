@@ -1,0 +1,5 @@
+<texture0>			bajiao_tree_bottom_6KB.jpg			RGBA
+<texture2>			normalize_%s.png	   CUBE	 CLAMP_TO_EDGE
+
+<ambient_shader>	ambient.shader
+<light_shader>		light_noshadow.shader
