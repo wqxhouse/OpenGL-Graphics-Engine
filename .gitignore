@@ -31,7 +31,6 @@ Thumbs.db
 
 #Ignore files built by Visual Studio
 *.opensdf
-*.obj
 *.exe
 *.pdb
 *.user
@@ -63,10 +62,7 @@ _ReSharper*/
 Packages/
 
 #Allow all files in GLUTLibrary folder
-!GLUTLibrary/*
-!3DObjs/*
-!Skybox/*
-!CSE167_Final/data/*
+!OpenGLGraphics/data/*
 !externs/*
 
 #Allow NuGet.exe

@@ -1,5 +1,0 @@
-<texture0>			Block_28KB.jpg			RGBA
-<texture2>			normalize_%s.png	   CUBE	 CLAMP_TO_EDGE
-
-<ambient_shader>	ambient.shader
-<light_shader>		light_noshadow.shader

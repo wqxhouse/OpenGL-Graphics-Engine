@@ -1,4 +1,0 @@
-<texture0>			sky.png		RGBA
-
-<ambient_shader>	sky_ambient.shader
-<light_shader>		light_noshadow.shader
